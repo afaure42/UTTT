@@ -12,6 +12,8 @@
 
 using namespace std;
 
+//seed=510707828
+
 /**
  * Auto-generated code below aims at helping you parse
  * the standard input according to the problem statement.
@@ -60,7 +62,7 @@ const uint_fast32_t wins[]
 //  | 0000 000[0 0000 0000] | 0000 000[0 0000 0000] |[0][0]00 000[0 0000 0000] [0][0]00 000[0 0000 0000]
 //                                                  ^  ^IS PLAYER1 WINNER     ^Last Player to play 
 //                                              Game finished
-#define CLEAR_LAST_MOVE_MASK	0x0000FFFFFFFFFFFF
+#define LAST_MOVE_MASK	0xFFFF000000000000
 #define LAST_MOVE_OFFSET		48
 
 #define LAST_PLAYER_MASK		0x8000
@@ -88,6 +90,8 @@ const uint_fast32_t wins[]
 
 #define C               1.4
 
+//PLAYER1 IS ALWAYS US, PLAYER2 ALWAYS THE ENEMY, PLAYER1 is ALWAYS TRUE
+
 typedef	uint_fast16_t	pos_type;
 typedef uint_fast32_t	smallboard_type;
 typedef uint_fast64_t 	bigboard_type;
@@ -97,13 +101,20 @@ typedef uint_fast64_t 	bigboard_type;
 //[0][0][0]
 //[0][0][0]
 //[0][0][0]
+int get_x(const smallboard_type & action);
+int get_y(const smallboard_type & action);
+bool debug = false;
 
-smallboard_type from_xy(short x, short y)
+smallboard_type from_xy(smallboard_type x, smallboard_type y)
 {
 	smallboard_type ret = 0;
 
-	ret |= ( (1 << ((y / 3) * 3) + x / 3) ) << 16;
-	ret |= ( (1 << ((y % 3) * 3) + x % 3) );
+	
+
+	ret =  (256 >> ((y - (y % 3)) + x / 3) ) << 16;
+	ret |=  256 >> (((y % 3) * 3) + x % 3);
+
+	return ret;
 }
 
 int get_x(const smallboard_type & action){
@@ -133,8 +144,8 @@ void print_nice_action(const smallboard_type & action)
 	std::cerr << "ACTION:\n"
 	<< bits.substr(0, 8) << ' ' << bits.substr(8, 8) << ' ' << bits.substr(16, 8) << ' ' << bits.substr(24, 8) << '\n'
 	<< "PLAYER:" << ((action & TO_MOVE_MASK) ? "PLAYER1" : "PLAYER2")
-	<< "\nBIGBOARD_ID:" <<  (u_short)to_index[(action >> 16) & POSITION_MASK]
-	<< "\nSMALLBOARD_ID:" << (u_short)to_index[action & POSITION_MASK]
+	<< "\nBIGBOARD_ID:" <<  (u_int)to_index[(action >> 16) & POSITION_MASK]
+	<< "\nSMALLBOARD_ID:" << (u_int)to_index[action & POSITION_MASK]
 	<< '\n';
 }
 
@@ -153,16 +164,21 @@ void print_bigboard(bigboard_type & bigboard)
 	<< "]\n";
 }
 
-void print_nice_bigboard(const smallboard_type (&boards)[9], const bigboard_type bigboard)
+void print_nice_bigboard(const smallboard_type *boards, const bigboard_type bigboard)
 {
+	if (debug) {
+		print_nice_action(boards[7]);
+	}
     for(int i = 0; i < 9; i++)
     {
        
         for (int j = 0; j < 9; j++)
         {
-            if ( boards[to_index[1 << i]] & (1 << 8 - j))
+			smallboard_type pos = from_xy(j, i);
+
+            if ( boards[to_index[(pos >> 16) & POSITION_MASK]] & (pos & POSITION_MASK))
                 std::cerr << 'x';
-            else if ( boards[to_index[1 << i]] & ((1 << 8 - j) << 16))
+            else if ( boards[to_index[(pos >> 16) & POSITION_MASK]] & ((pos & POSITION_MASK) << 16))
                 std::cerr << 'o';
             else
                 std::cerr << '-';
@@ -175,17 +191,28 @@ void print_nice_bigboard(const smallboard_type (&boards)[9], const bigboard_type
     }
 }
 
-void apply_action(bigboard_type & big_board, smallboard_type (&boards)[9], const smallboard_type & action)
+void apply_action(bigboard_type & big_board, smallboard_type *boards, const smallboard_type & action)
 {
-    uint_fast16_t small_pos = ((action >> 16) & POSITION_MASK);
+    smallboard_type small_pos = ((action >> 16) & POSITION_MASK);
     smallboard_type & current = boards[to_index[small_pos]];
+	if (debug) {
+		std::cerr << "small_pos:" << small_pos
+		<< ";index:" << (int)to_index[small_pos] <<'\n';
+	}
 
     //switching last player using XOR (this will just flip the bit)
-    big_board ^= LAST_PLAYER_MASK;
+	if (big_board != 0)
+    	big_board ^= LAST_PLAYER_MASK;
+	if (debug) {
+	std::cerr << "Switching last player\n";
+	print_bigboard(big_board);}
 
     //adding the small move to the history ( so i can test for possible actions later)
-    big_board = big_board & CLEAR_LAST_MOVE_MASK;
+    big_board = big_board & ~LAST_MOVE_MASK;
     big_board |= (action & POSITION_MASK) << LAST_MOVE_OFFSET;
+	if (debug) {
+	std::cerr << "Adding Small Move\n";
+	print_bigboard(big_board);}
 
     //determining wich player is doing the move
     short         player_offset    = (action >> 31) ? 16 : 0;
@@ -197,6 +224,14 @@ void apply_action(bigboard_type & big_board, smallboard_type (&boards)[9], const
     current |= (action & TO_MOVE_MASK) >> 16;
 
     //then test if little board is finished
+	if (debug) {
+	std::cerr << "Modifications should be over\n";
+	print_nice_action(action);
+	print_bigboard(big_board);
+	print_nice_action(current);
+	print_nice_action(boards[7]);
+	print_nice_bigboard(boards, big_board);
+	}
 
     //first testing for a win
     for (int i = 0; i < WIN_NUMBER; i++)
@@ -265,8 +300,10 @@ smallboard_type create_action(
 void list_smallboard_actions(std::vector<smallboard_type> & list,
 	pos_type bigboard_pos, smallboard_type smallboard, bool player)
 {
+	if (smallboard & FINISH_MASK)
+		return;
 	//keeping only the positions of both player combined
-	smallboard = (smallboard >> 16) & POSITION_MASK;
+	smallboard = (smallboard | (smallboard >> 16)) & POSITION_MASK;
 
 	for(int i = 0; i < 9; i++)
 	{
@@ -320,7 +357,7 @@ public:
 
     Node(const bigboard_type & bigboard, const smallboard_type (&smallboards)[9],
 		const smallboard_type & action, Node * parent)
-    :bigboard(bigboard), action(action), parent(parent)
+    :bigboard(bigboard), action(action), parent(parent), value(), visits(), terminal(false)
     {
         memcpy(this->smallboards, smallboards, sizeof(smallboard_type[9]));
         apply_action(this->bigboard, this->smallboards, this->action);
@@ -331,6 +368,7 @@ public:
         if (isTerminal(this->bigboard))
         {
 			this->value = isWin(this->bigboard) ? 1 : (isLost(this->bigboard) ? 0 : 0.5);
+			this->terminal = true;
             this->visits = 1;
         }
 		else 
@@ -465,8 +503,6 @@ public:
         std::cerr << '\n';
     }
 }*/
-
-
 
 typedef vector<Node *>::iterator      node_iter;
 typedef vector<Node>::const_iterator     cst_node_iter;
@@ -606,21 +642,27 @@ int main()
     memset(smallboards, 0, sizeof(smallboard_type[9]));
     Node * root = new Node(bigboard, smallboards);
     std::cerr << "root possible moves:"<< root->possible_moves.size() << "\n";
+	int opponent_row;
+	int opponent_col;
+	Node * current;
     // game loop
     while (1) 
     {
-        Node * current = root;
-        int opponent_row;
-        int opponent_col;
+		current = root;
+		clock_t now = clock();
         cin >> opponent_row >> opponent_col; cin.ignore();
         if (opponent_row != -1)
         {
-            std::cerr << "Removing unusefull branches\n";
+            // std::cerr << "Removing unusefull branches\n";
 			smallboard_type action = 0;
-			action |= from_xy(opponent_col, opponent_row);
-			action |= TO_MOVE_MASK;
+			// std::cerr << elapsed_time(now) << std::endl;
+			action = from_xy(opponent_col, opponent_row);
+
+			// std::cerr << "Enemy Action:\n";
+			// print_nice_action(action);
             current = root->select_enemy_move(action);
             delete root;
+			root = current;
         }
         std::cerr << "Not Crashed yet" << std::endl;
 
@@ -639,15 +681,15 @@ int main()
         std::cerr << "Before MCTS\n";
 		print_bigboard(current->bigboard);
         print_nice_bigboard(current->smallboards, current->bigboard);
-        current = mcts(current, 85, clock());
+        current = mcts(current, 75, now);
         std:cerr << "Number of childs in best move node:" << current->children.size() << 
         " score:" << current->value << ", visits:" << current->visits << '\n';
         std::cerr << "LET ME GUESS" << std::endl;
         current->parent = NULL;
         // delete root;
         root = current;
-		print_nice_action(current->action);
-        print_nice_bigboard(current->smallboards, current->bigboard);
+		// print_nice_action(current->action);
+        // print_nice_bigboard(current->smallboards, current->bigboard);
 
         cout << get_y_x(current->action) << endl;
     }
