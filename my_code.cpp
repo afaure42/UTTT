@@ -8,6 +8,7 @@
 #include <stdio.h>
 #include <math.h>
 #include <bitset>
+#include <fstream>
 #pragma GCC optimize ("O3")
 
 using namespace std;
@@ -478,7 +479,6 @@ public:
         return ret;
     }
 
-
     bigboard_type bigboard;
 	smallboard_type smallboards[9];
     smallboard_type action;
@@ -503,6 +503,18 @@ public:
         std::cerr << '\n';
     }
 }*/
+
+void dump_node(Node & node)
+{
+	
+}
+
+void dump_tree(ofstream & myfile, Node & root)
+{
+	if (!myfile.is_open())
+		myfile.open("")
+}
+
 
 typedef vector<Node *>::iterator      node_iter;
 typedef vector<Node>::const_iterator     cst_node_iter;
