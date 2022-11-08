@@ -1,4 +1,5 @@
 #include <iostream>
+#include <iomanip>
 #include <string>
 #include <vector>
 #include <algorithm>
@@ -27,18 +28,33 @@ using namespace std;
 // 4 = 6
 // 2 = 7
 // 1 = 8
-std::map<uint_fast32_t, uint_fast8_t> to_index
+// std::map<uint_fast32_t, uint_fast8_t> to_index
+// {
+//     std::make_pair(256, 0),
+//     std::make_pair(128, 1),
+//     std::make_pair(64, 2),
+//     std::make_pair(32, 3),
+//     std::make_pair(16, 4),
+//     std::make_pair(8, 5),
+//     std::make_pair(4, 6),
+//     std::make_pair(2, 7),
+//     std::make_pair(1, 8)
+// };
+
+uint_fast32_t to_index[257];
+
+void to_index_init()
 {
-    std::make_pair(256, 0),
-    std::make_pair(128, 1),
-    std::make_pair(64, 2),
-    std::make_pair(32, 3),
-    std::make_pair(16, 4),
-    std::make_pair(8, 5),
-    std::make_pair(4, 6),
-    std::make_pair(2, 7),
-    std::make_pair(1, 8)
-};
+	to_index[256] =  (uint_fast8_t)0;
+	to_index[128]= (uint_fast8_t)1;
+	to_index[64]= (uint_fast8_t)2;
+	to_index[32]= (uint_fast8_t)3;
+	to_index[16]= (uint_fast8_t)4;
+	to_index[8]= (uint_fast8_t)5;
+	to_index[4]= (uint_fast8_t)6;
+	to_index[2]= (uint_fast8_t)7;
+	to_index[1] = (uint_fast8_t)8;
+}
 
 const uint_fast32_t wins[]
 {
@@ -52,6 +68,9 @@ const uint_fast32_t wins[]
     0b0000000001010100,
 };
 
+class Node;
+
+// std::vector<Node> node_vector;
 //    0 1 2
 //    3 4 5
 //    6 7 8
@@ -88,7 +107,7 @@ const uint_fast32_t wins[]
 #define PLAYER2_SCORE   0
 #define DRAW_SCORE      0.5
 
-#define C               1.4
+#define C               1.2f
 
 //PLAYER1 IS ALWAYS US, PLAYER2 ALWAYS THE ENEMY, PLAYER1 is ALWAYS TRUE
 
@@ -103,18 +122,20 @@ typedef uint_fast64_t 	bigboard_type;
 //[0][0][0]
 int get_x(const smallboard_type & action);
 int get_y(const smallboard_type & action);
-bool debug = false;
-int node_counter = 0;
+// bool debug = true;
+unsigned long node_counter = 0;
+// unsigned turn = 0;
 
 smallboard_type from_xy(smallboard_type x, smallboard_type y)
 {
 	smallboard_type ret = 0;
 
-	
-
-	ret =  (256 >> ((y - (y % 3)) + x / 3) ) << 16;
-	ret |=  256 >> (((y % 3) * 3) + x % 3);
-
+	// std::cerr << "x:" << x << "y:" << y << '\n';
+	ret =  (256U >> (((unsigned)std::floor(y / 3)) * 3 + (unsigned)std::floor(x / 3) )) << 16;
+	// std::cerr << y / 3 << "* 3 + " <<  + x /3 << '\n';
+	// std::cerr << (int)((((y / 3)) * 3) + (int)((int)x / 3) ) << '\n';
+	ret |=  256U >> ((y % 3) * 3) + x % 3;
+	// std::cerr << ((y % 3) * 3) + x % 3 << '\n';
 	return ret;
 }
 
@@ -167,9 +188,9 @@ void print_bigboard(bigboard_type & bigboard)
 
 void print_nice_bigboard(const smallboard_type *boards, const bigboard_type bigboard)
 {
-	if (debug) {
-		print_nice_action(boards[7]);
-	}
+	// if (debug) {
+		// print_nice_action(boards[7]);
+	// }
     for(int i = 0; i < 9; i++)
     {
        
@@ -196,26 +217,31 @@ void apply_action(bigboard_type & big_board, smallboard_type *boards, const smal
 {
 	// if (debug)
 		// print_nice_action(action);
+	// if (node_counter == 82)
+		// print_nice_bigboard(boards, big_board);
+
     smallboard_type small_pos = ((action >> 16) & POSITION_MASK);
     smallboard_type & current = boards[to_index[small_pos]];
-	if (debug) {
-		std::cerr << "small_pos:" << small_pos
-		<< ";index:" << (int)to_index[small_pos] <<'\n';
-	}
+	// if (debug && (turn == 50 || turn == 51))
+		// print_nice_action(current);
+	// if (debug) {
+		// std::cerr << "small_pos:" << small_pos
+		// << ";index:" << (int)to_index[small_pos] <<'\n';
+	// }
 
     //switching last player using XOR (this will just flip the bit)
 	if (big_board != 0)
     	big_board ^= LAST_PLAYER_MASK;
-	if (debug) {
-	std::cerr << "Switching last player\n";
-	print_bigboard(big_board);}
+	// if (debug) {
+	// std::cerr << "ACTION FROM PLAYER" << (big_board & LAST_PLAYER_MASK ? "1" : "2") << '\n';
+	// }
 
     //adding the small move to the history ( so i can test for possible actions later)
     big_board = big_board & ~LAST_MOVE_MASK;
     big_board |= (action & POSITION_MASK) << LAST_MOVE_OFFSET;
-	if (debug) {
-	std::cerr << "Adding Small Move\n";
-	print_bigboard(big_board);}
+	// if (debug) {
+	// std::cerr << "Adding Small Move\n";
+	// print_bigboard(big_board);}
 
     //determining wich player is doing the move
     short         player_offset    = (action & TO_MOVE_MASK ) ? 16 : 0;
@@ -227,20 +253,21 @@ void apply_action(bigboard_type & big_board, smallboard_type *boards, const smal
     current |= (action & TO_MOVE_MASK) >> 16;
 
     //then test if little board is finished
-	if (debug) {
-	std::cerr << "Modifications should be over\n";
-	print_nice_action(action);
-	print_bigboard(big_board);
-	print_nice_action(current);
-	print_nice_action(boards[7]);
-	print_nice_bigboard(boards, big_board);
-	}
+	// if (debug) {
+	// std::cerr << "Modifications should be over\n";
+	// print_nice_action(action);
+	// print_bigboard(big_board);
+	// print_nice_action(current);
+	// print_nice_action(boards[7]);
+	// print_nice_bigboard(boards, big_board);
+	// }
 
+	
     //first testing for a win
     for (int i = 0; i < WIN_NUMBER; i++)
     {
         //only testing for one player since the other cant have won
-        if ( (current & (wins[i] << player_offset)) == wins[i])
+        if ( ((current >> player_offset) & wins[i]) == wins[i])
         {
             current |= ((1 << PLAYER_WIN_OFFSET) << player_offset);
             big_board |= ((action >> 16) & POSITION_MASK) << player_offset; 
@@ -262,7 +289,7 @@ void apply_action(bigboard_type & big_board, smallboard_type *boards, const smal
         //test if big board is finished
         for(int i = 0; i < WIN_NUMBER; i++)
         {
-            if ( (big_board & (wins[i] << player_offset)) == wins[i])
+            if ( ((smallboard_type)(big_board >> player_offset) & wins[i]) == wins[i])
             {
                 big_board |= FINISH_MASK;
                 big_board |= ((1 << PLAYER_WIN_OFFSET) << player_offset);
@@ -272,6 +299,19 @@ void apply_action(bigboard_type & big_board, smallboard_type *boards, const smal
         if (!(big_board & FINISH_MASK) && ((big_board | big_board >> 16 | big_board >> 32) & POSITION_MASK) == POSITION_MASK)
             big_board |= FINISH_MASK;
     }
+	/*if (debug && (turn == 50 || turn == 51))
+		print_nice_action(current);
+	if (debug && current & FINISH_MASK)
+	{
+		std::cerr << "DETECTED A WIN DURING ACTION:\n";
+		print_nice_action(action);
+		print_nice_bigboard(boards, big_board);
+	}
+	if (debug && big_board & FINISH_MASK)
+	{
+		std::cerr << "DETECTED A BIG WIN\n";
+		print_bigboard(big_board);
+	}*/
 }
 
 float get_board_score(bigboard_type & bigboard)
@@ -300,40 +340,58 @@ smallboard_type create_action(
 	return ret;
 }
 
-void list_smallboard_actions(std::vector<smallboard_type> & list,
+void inline list_smallboard_actions(smallboard_type (&list)[81], int & size,
 	pos_type bigboard_pos, smallboard_type smallboard, bool player)
 {
 	if (smallboard & FINISH_MASK)
 		return;
 	//keeping only the positions of both player combined
 	smallboard = (smallboard | (smallboard >> 16)) & POSITION_MASK;
+	/*if (debug && turn == 50) {
+		std::cerr << "bigboard_pos:" << (int)to_index[bigboard_pos] << '\n';
+		print_nice_action(smallboard);
+	}*/
 
 	for(int i = 0; i < 9; i++)
 	{
-		if(!(smallboard & (1 << i)))
-			list.push_back(create_action(bigboard_pos, 1 << i, player));
+		if(!(smallboard & (1U << i)))
+			list[size++] = (create_action(bigboard_pos, 1 << i, player));
 	}
 }
 // uint16_t getDrawPos(const bigboard_type & type)
-void list_actions(std::vector<smallboard_type> & list, 
-    const bigboard_type & bigboard, const smallboard_type (&smallboard)[9])
+int list_actions(smallboard_type (&list)[81],
+    const bigboard_type & bigboard, const smallboard_type * smallboard)
 {
+	int size = 0;
 	pos_type last_move = (bigboard >> LAST_MOVE_OFFSET) & POSITION_MASK;
 
 	bool player = !(bigboard & LAST_PLAYER_MASK);
-	if (player && node_counter == 70)
-		std::cerr << "PLAYER1\n";
-	else if (node_counter == 70)
-		std::cerr << "PLAYER2\n";
+	// if (debug)
+		// std::cerr << "LISTING ACTIONS FOR PLAYER" << (player ? "1" : "2") << '\n';
 
     //testing if targeted move space is full
     if (smallboard[to_index[last_move]] & FINISH_MASK || last_move == 0)
 	{
  	   for(int i = 0; i < 9; i++)
-			list_smallboard_actions(list, 1 << i, smallboard[i], player);
+	   {
+		// if (debug && turn == 50)
+			// std::cerr << "LISTING ACTIONS FOR BOARD:" << i << '\n';
+		list_smallboard_actions(list, size, 1 << (8 - i), smallboard[i], player);
+	   }
 	}
 	else
-		list_smallboard_actions(list, last_move, smallboard[to_index[last_move]], player);
+		list_smallboard_actions(list, size, last_move, smallboard[to_index[last_move]], player);
+	/*if (debug && turn == 50) {
+	std::cerr << "LISTING ACTIONS FOR BIGBOARD:\n"
+	<< "IS FINISHED:" << (smallboard[to_index[bigboard >> LAST_MOVE_OFFSET]] & FINISH_MASK)<< '\n';
+	print_nice_action(smallboard[to_index[bigboard >> LAST_MOVE_OFFSET]]);
+
+	print_nice_bigboard(smallboard, bigboard);
+	for(int i = 0; i < list.size(); i++)
+		std::cerr << "[" << get_y_x(list[i]) << "]";
+	std::cerr << '\n';}
+	*/
+	return (size);
 }
 
 inline bool isTerminal(const bigboard_type & bigboard) {
@@ -353,20 +411,22 @@ class Node
 public:
     Node()
     :bigboard(0), action(), parent(), possible_moves(),
-		value(), visits(), terminal(false), id(node_counter++)
+		wins(), visits(), terminal(false), possible_moves_size(), id(node_counter++)
 	{};
 
     Node(const bigboard_type & bigboard, const smallboard_type (&smallboards)[9])
-    :bigboard(bigboard), parent(), action(), value(), visits(), terminal(false), id(node_counter++)
+    :bigboard(bigboard), parent(), action(), wins(), visits(), terminal(false),
+		possible_moves_size(), id(node_counter++)
     {
-		this->bigboard ^= LAST_PLAYER_MASK;
+		this->bigboard |= LAST_PLAYER_MASK;
 		memcpy(this->smallboards, smallboards, sizeof(smallboard_type[9]));
-		list_actions(this->possible_moves, this->bigboard, this->smallboards);
+		this->possible_moves_size = list_actions(this->possible_moves, this->bigboard, this->smallboards);
     }
 
     Node(const bigboard_type & bigboard, const smallboard_type (&smallboards)[9],
 		const smallboard_type & action, Node * parent)
-    :bigboard(bigboard), action(action), parent(parent), value(), visits(), terminal(false), id(node_counter++)
+    :bigboard(bigboard), action(action), parent(parent), wins(), visits(), terminal(false),
+		possible_moves_size(), id(node_counter++)
     {
         memcpy(this->smallboards, smallboards, sizeof(smallboard_type[9]));
         apply_action(this->bigboard, this->smallboards, this->action);
@@ -376,25 +436,31 @@ public:
 
         if (isTerminal(this->bigboard))
         {
-			this->value = isWin(this->bigboard) ? 1 : (isLost(this->bigboard) ? 0 : 0.5);
+			// this->value = isWin(this->bigboard) ? 1 : (isLost(this->bigboard) ? 0 : 0.5);
+			this->wins = isWin(this->bigboard) ? 1 : 0;
 			this->terminal = true;
             this->visits = 1;
         }
 		else 
-			list_actions(this->possible_moves, this->bigboard, this->smallboards);
+			this->possible_moves_size = list_actions(this->possible_moves, this->bigboard, this->smallboards);
     }
+    Node(const Node & ref)
+	{
+		*this = ref;
+	}
 
     Node & operator=(const Node & ref)
     {
         memcpy(&this->smallboards, &ref.smallboards, sizeof(smallboard_type[9]));
+		memcpy(&this->possible_moves, &ref.possible_moves, sizeof(smallboard_type[81]));
 		this->bigboard = ref.bigboard;
         this->action = ref.action;
         this->parent = ref.parent;
-        this->possible_moves = ref.possible_moves;
         this->children = ref.children;
-        this->value = ref.value;
+        this->wins = ref.wins;
         this->visits = ref.visits;
 		this->id = ref.getId();
+		this->terminal = ref.terminal;
         return *this;
     };
 
@@ -406,7 +472,9 @@ public:
 
     Node * add_child(const smallboard_type & action)
     {
-        Node *child = new Node(this->bigboard, this->smallboards, action, this);
+		// node_vector.push_back(Node(this->bigboard, this->smallboards, action, this));
+        // Node *child = &node_vector.back();
+		Node * child = new Node(this->bigboard, this->smallboards, action, this);
 
         this->children.push_back(child);
         return child;
@@ -434,21 +502,27 @@ public:
         Node * ret = NULL;
 
 
-        std::cerr << "in enemy move\n";
-        std:;cerr << "children size:" << this->children.size() << '\n';
+        // std::cerr << "in enemy move\n";
+        // std::cerr << "children size:" << this->children.size() << '\n';
         for(int i = 0; i < this->children.size(); i++)
         {
-            if (this->children[i]->action == action)
+            if ((this->children[i]->action & action) == action)
             {
-                std::cerr << "Found corresponding child\n";
-				std::cerr << "Enemy move was:" << get_y_x(this->children[i]->action) << '\n';
+                // std::cerr << "Found corresponding child\n";
+				// std::cerr << "Enemy move was:" << get_y_x(this->children[i]->action) << '\n';
+
                 ret = this->children[i];
                 this->children.erase(this->children.begin() + i);
                 break;
             }
         }
         if (ret == NULL)
-            return new Node(this->bigboard, this->smallboards, action, NULL);
+		{
+			std::cerr << "NO CORRESPONDING MOVE FOUND\n";
+			// node_vector.push_back(Node(this->bigboard, this->smallboards, action, NULL));
+            // return &node_vector.back();
+			return new Node(this->bigboard, this->smallboards, action, NULL);
+		}
         else
         {
             ret->parent = NULL;
@@ -458,32 +532,37 @@ public:
 
     Node * get_best_move()
     {
-        int value = -1;
+        int max_wins = 0;
         Node * ret = NULL;
 
+		// if (debug)
+			// std::cerr << "Finding best move, CHILDREN.SIZE:" << children.size() << "\n";
         // int terminals = 0;
         for (int i = 0; i < children.size(); i++)
         {
 			//checking for immediate win
             if (isTerminal(this->children[i]->bigboard) && isWin(this->children[i]->bigboard))
+			{
+				// if(debug)
+					// std::cerr << "returning instant win\n";
                 return this->children[i];
+			}
 
-            if (this->children[i]->value > value)
+            if (this->children[i]->wins > max_wins)
             {
                 ret = this->children[i];
-                value = ret->value;
+                max_wins = ret->wins;
             }
         }
         // std::cerr << "Number of terminal childs during move choose:" << terminals << '\n';
+		// if (debug)
+			// std::cerr << "returning node address:" << ret << '\n';
         return ret;
     }
 
     smallboard_type select_move()
     {
-        int i = rand() % this->possible_moves.size();
-        smallboard_type ret = this->possible_moves[i];
-
-        possible_moves.erase(this->possible_moves.begin() + i);
+        smallboard_type ret = this->possible_moves[this->possible_moves_size--];
         return ret;
     }
 
@@ -496,13 +575,14 @@ public:
 
     Node * parent;
     std::vector<Node *> children;
-    std::vector<smallboard_type> possible_moves;
+    smallboard_type possible_moves[81];
+	int possible_moves_size;
     bool terminal;
-    float value;
+    // float value;
+	int wins;
     int visits;
 	int id;
 private:
-    Node(const Node & ref);
 };
 
 /*void print_board(const int (&board)[3][3])
@@ -520,7 +600,19 @@ private:
 
 void dump_node(Node & node, ofstream & myfile)
 {
-	myfile << '\t' << node.getId() << "[label=\"[" << get_y_x(node.action) << "] VpV=" << node.value / node.visits<< "\"]\n";
+	myfile << '\t' << node.getId() << "[label=\"[" << get_y_x(node.action) << "]\nW=" << node.wins << ";V=" << node.visits<< '\"';
+	if (isTerminal(node.bigboard))
+	{
+		myfile << " color=\"";
+		if (isWin(node.bigboard))
+			myfile << "green";
+		else if (isLost(node.bigboard))
+			myfile << "red";
+		else
+			myfile << "blue";
+		myfile << '\"';
+	}
+	myfile <<"]\n";
 	for(int i = 0; i < node.children.size(); i++) {
 		myfile << '\t' << node.getId() << " -> " << node.children[i]->getId() << std::endl;
 	}
@@ -534,6 +626,7 @@ void dump_tree(ofstream & myfile, Node & root)
 	if (!myfile.is_open())
 		myfile.open("tree_dump.dot");
 	myfile << "strict digraph {\n";
+	myfile << "\tnode [shape=\"rect\"]\n";
 
 	dump_node(root, myfile);
 
@@ -549,7 +642,7 @@ float ucb1(const Node &node)
 {
     if (node.visits == 0)
         return 0;
-    return ((float)node.value / node.visits + C * sqrt(log(node.parent->visits) / node.visits));
+    return ((float)node.wins / node.visits + C * sqrt(log(node.parent->visits) / node.visits));
 }
 
 Node * select_child(Node & node)
@@ -586,63 +679,79 @@ void expand(Node * node)
 float rollout(
 		bigboard_type bigboard,
 		const smallboard_type (&start_boards)[9],
-		std::vector<smallboard_type> possible_actions)
+		const smallboard_type (&possible_actions)[81],
+		int size)
 {
     smallboard_type smallboards[9];
+	smallboard_type actions[81];
+
 
 
     memcpy(smallboards, start_boards, sizeof(smallboard_type[9]));
-	if (node_counter == 3) {
-		print_nice_bigboard(smallboards, bigboard);
-	}
+	memcpy(actions, possible_actions, sizeof(smallboard_type[81]));
+	// if (node_counter == 3) {
+		// print_nice_bigboard(smallboards, bigboard);
+	// }
     smallboard_type current_action;
-
+	// turn = 0;
     while (1)
     {
-		if (node_counter == 3)
-			print_nice_bigboard(smallboards, bigboard);
-        current_action = possible_actions[rand() % possible_actions.size()];
+		// if (node_counter == 3)
+			// print_nice_bigboard(smallboards, bigboard);
+        current_action = actions[rand() % size];
+		// if (debug) {
+			// std::cerr << "ROLLOUT TURN:" << turn << '\n';
+		// }
 		apply_action(bigboard, smallboards, current_action);
 
 		if (isTerminal(bigboard))
 			break;
-        possible_actions.clear();
-		list_actions(possible_actions, bigboard, smallboards);
+		
+		// std::cerr << "PLAYING IN :[" << get_y_x(current_action) << "]\n";
+		size = list_actions(actions, bigboard, smallboards);
+		// turn++;
     }
-	if (node_counter == 3)
-	{
-		print_nice_bigboard(smallboards, bigboard);
-		print_bigboard(bigboard);
-	}
+	// if (node_counter == 3)
+	// {
+		// print_nice_bigboard(smallboards, bigboard);
+		// print_bigboard(bigboard);
+	// }
 	if (isWin(bigboard))
 		return 1;
 	if (isLost(bigboard))
 		return 0;
     else
-        return 0.5;
+        return 0;
 }
 
 void update_path(Node * node)
 {
-    float value = node->value;
+    int wins = node->wins;
     node = node->parent;
 
     while(node != NULL)
     {
-        node->value += value;
+        node->wins += wins;
         ++node->visits;
         node = node->parent;
     }
 }
+
+int terminal_nodes = 0;
 
 void mcts_iteration(Node * node)
 {
 	if (node == NULL)
 		std:cerr << "Brace for impact\n";
     // std::cerr << "Selecting" << std::endl;
-    while(node->possible_moves.empty() && !isTerminal(node->bigboard))
+    while(node->possible_moves_size == 0 && !isTerminal(node->bigboard))
         node = select_child(*node);
 
+	if (isTerminal(node->bigboard))
+	{
+		terminal_nodes++;
+		// std::cerr << node->id << '\n';
+	}
 
 	// std::cerr << "Selection finished" << std::endl;
     if (!isTerminal(node->bigboard))
@@ -656,7 +765,7 @@ void mcts_iteration(Node * node)
     if(!isTerminal(node->bigboard))
     {
         // std::cerr << "Starting Rollout" << std::endl;
-        node->value = rollout(node->bigboard, node->smallboards, node->possible_moves);
+        node->wins = rollout(node->bigboard, node->smallboards, node->possible_moves, node->possible_moves_size);
         node->visits = 1; 
     }
 
@@ -685,19 +794,29 @@ Node * mcts(Node * root, int max_time, clock_t start_time)
 
 int main()
 {
+	try {
+	to_index_init();
 	std::ofstream tree_file;
 	smallboard_type smallboards[9];
 	bigboard_type bigboard = 0;
+	// node_vector.reserve(100000);
     memset(smallboards, 0, sizeof(smallboard_type[9]));
-    Node * root = new Node(bigboard, smallboards);
+	// node_vector.push_back(Node(bigboard, smallboards));
+    // Node * root = &node_vector.back();
+	Node * root = new Node(bigboard, smallboards);
 	Node * permanent_root = root;
-    std::cerr << "root possible moves:"<< root->possible_moves.size() << "\n";
+    std::cerr << "root possible moves:"<< root->possible_moves_size << "\n";
+	for(int i = 0; i < root->possible_moves_size; i++)
+		std::cerr << "[" << get_y_x(root->possible_moves[i]) << "]";
+	std::cerr << '\n';
 	int opponent_row;
 	int opponent_col;
 	Node * current;
     // game loop
     while (1) 
     {
+		std::bitset<32> bits(FINISH_MASK);
+		std::cerr << bits.to_string() << std::endl;
 		current = root;
 		clock_t now = clock();
         cin >> opponent_row >> opponent_col; cin.ignore();
@@ -707,11 +826,12 @@ int main()
 			smallboard_type action = 0;
 			// std::cerr << elapsed_time(now) << std::endl;
 			action = from_xy(opponent_col, opponent_row);
+			print_nice_action(action);
 
 			// std::cerr << "Enemy Action:\n";
 			// print_nice_action(action);
             current = root->select_enemy_move(action);
-            // delete root;
+            delete root;
 			root = current;
         }
         std::cerr << "Not Crashed yet" << std::endl;
@@ -728,14 +848,19 @@ int main()
         // To debug: cerr << "Debug messages..." << endl;
 
 
-        std::cerr << "Before MCTS\n";
-		print_bigboard(current->bigboard);
+        // std::cerr << "Before MCTS\n";
+		// print_bigboard(current->bigboard);
+        current = mcts(current, 70, now);
         print_nice_bigboard(current->smallboards, current->bigboard);
-        current = mcts(current, 100, now);
-		dump_tree(tree_file, *permanent_root);
+		// for(int i = 0; i < current->children.size(); i++)
+			// std::cerr << "[" << get_y_x(current->children[i]->action) << "]";
+		// std::cerr << '\n';
+		
+		dump_tree(tree_file, *current);
+		// std::cerr << "Terminal nodes :" << terminal_nodes << '\n';
         std:cerr << "Number of childs in best move node:" << current->children.size() << 
-        " score:" << current->value << ", visits:" << current->visits << '\n';
-        std::cerr << "LET ME GUESS" << std::endl;
+        " score:" << current->wins << ", visits:" << current->visits << '\n';
+        // std::cerr << "LET ME GUESS" << std::endl;
         current->parent = NULL;
         // delete root;
         root = current;
@@ -744,4 +869,9 @@ int main()
 
         cout << get_y_x(current->action) << endl;
     }
+	}
+	catch (std::exception & e)
+	{
+		std:: cerr << e.what() << std::endl;
+	}
 }
