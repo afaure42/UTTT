@@ -19,6 +19,8 @@ public:
     Node & operator=(const Node & ref);
 	~Node();
 
+	void	apply_action(const smallboard_type & action);
+	void	list_actions(void);
 
 	Node * add_child(const smallboard_type & action);
 	Node * remove_child(const Node * & ref);

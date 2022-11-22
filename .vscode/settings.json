@@ -55,5 +55,6 @@
 		"complex": "cpp",
 		"cstring": "cpp",
 		"cinttypes": "cpp"
-	}
+	},
+	"editor.fontFamily": "'Monocraft', monospace"
 }
