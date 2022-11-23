@@ -317,8 +317,9 @@ int main(int argc, char **argv)
 		else
 		{
 			current->bigboard &= ~LAST_PLAYER_MASK;
-			current->possible_moves_size = list_actions(current->possible_moves,
-									current->bigboard, current->smallboards);
+			current->possible_moves[0] = from_xy(4, 4);
+			current->possible_moves[0] |= TO_MOVE_MASK;
+			current->possible_moves_size = 1;
 		}
 
         int valid_action_count;
@@ -340,11 +341,11 @@ int main(int argc, char **argv)
 			// std::cerr << "[" << get_y_x(current->children[i]->action) << "]";
 		// std::cerr << '\n';
 		
-		// dump_tree(tree_file, *permanent_root);
+		dump_tree(tree_file, *permanent_root);
 		// std::cerr << "Terminal nodes :" << terminal_nodes << '\n';
         // std:cerr << "Number of childs in best move node:" << current->children.size() << 
         // " score:" << current->wins << ", visits:" << current->visits << '\n';
-        print_nice_bigboard(current->smallboards, current->bigboard);
+        // print_nice_bigboard(current->smallboards, current->bigboard);
         // std::cerr << "LET ME GUESS" << std::endl;
         current->parent = NULL;
         // delete root;
@@ -354,6 +355,8 @@ int main(int argc, char **argv)
 
 		// cerr << "sending:" << get_y_x(current->action) << endl;
         cout << get_y_x(current->action) << endl;
+		if (opponent_col == -1)
+			print_nice_bigboard(current->smallboards, current->bigboard);
     }
 	}
 	catch (std::exception & e)

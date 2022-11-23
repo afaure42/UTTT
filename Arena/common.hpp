@@ -15,6 +15,10 @@
 #include <sys/types.h>
 #include <sys/wait.h>
 
+#include <thread>
+#include <mutex>
+
+
 #include "Board.hpp"
 #include "Player.hpp"
 #include "customExceptions.hpp"
@@ -22,17 +26,5 @@
 
 #define WRITE_END	1
 #define READ_END	0
-
-
-struct t_pos
-{
-	t_pos();
-	t_pos(const t_pos & ref):col(ref.col), row(ref.row)
-	{}
-	t_pos(int col, int row):col(col), row(row)
-	{}
-	int col;
-	int row;
-};
 
 #endif

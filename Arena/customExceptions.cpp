@@ -1,5 +1,6 @@
 #include "customExceptions.hpp"
 
+using namespace arena;
 /*****EXCEPTIONS*******/
 syscall_error::syscall_error(int err, std::string msg)
 :_errno(err), _msg(msg)

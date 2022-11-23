@@ -1,5 +1,7 @@
 #include "Player.hpp"
 
+using namespace arena;
+
 /*			EXCEPTIONS			*/
 const char * Player::playerNotLaunchedException::what() const throw()
 {
@@ -41,13 +43,10 @@ Player::~Player()
 	if (this->_in_fd != -1)
 		close(this->_out_fd);
 	if (this->_pid != -1)
-	{
-		this->killProcess();
-		this->waitProcess();
-	}
+		this->stopPlayer();
 }
 
-void Player::launchPlayer(void)
+void Player::launchPlayer(char *name)
 {
 	this->_in_fd = dup(this->_pipe_in[READ_END]);
 	if (_in_fd < 0)
@@ -77,20 +76,78 @@ void Player::launchPlayer(void)
 		
 		if (dup2(this->_pipe_in[WRITE_END], STDOUT_FILENO) < 0)
 			throw(arena::syscall_error(errno, "CHILD: Player::launchPlayer: dup2:"));
-		
-		char *args = NULL;
+	
+		char **args = (char **)malloc(2 * sizeof(char*));
+		args[0] = name;
+		args[1] = NULL;
 
-		if (execvp(this->_path.c_str(), &args) < 0)
+		if (execvp(this->_path.c_str(), args) < 0)
 			throw(arena::syscall_error(errno, "CHILD: Player::launchPlayer: execvp:"));
 	}
 }
 
-void Player::killProcess(void)
+void Player::stopPlayer(void)
+{
+	this->_killProcess();
+	this->_waitProcess();
+}
+
+void Player::_killProcess(void)
 {
 	kill(this->_pid, SIGKILL);
 }
 
-void Player::waitProcess(void)
+void Player::_waitProcess(void)
 {
 	waitpid(this->_pid, NULL, 0);
+}
+
+arena::t_pos Player::recvPos()
+{
+	t_pos ret;
+	char buff[8];
+	
+	for(int i = 0;;i++)
+	{
+		read(this->_in_fd, buff + i, 1);
+		if (buff[i] == '\n')
+		{
+			buff[i + 1] = '\0';
+			break;
+		}
+	}
+
+	ret.row = buff[0] - '0';
+	ret.col = buff[2] - '0';
+	return ret;
+}
+
+void Player::sendPos(arena::t_pos & pos)
+{
+	char buff[9];
+	if (pos.col == -1)
+	{
+		buff[0] = '-';
+		buff[1] = '1';
+		buff[2] = ' ';
+		buff[3] = '-';
+		buff[4] = '1';
+		buff[5] = '\n';
+		buff[6] = '0';
+		buff[7] = '\n';
+		buff[8] = '\0';
+	}
+	else
+	{
+		buff[0] = '0' + pos.row;
+		buff[1] = ' ';
+		buff[2] = '0' + pos.col;
+		buff[3] = '\n';
+		buff[4] = '0';
+		buff[5] = '\n';
+		buff[6] = '\0';
+	}
+
+	// std::cout << buff << '\n';
+	write(this->_out_fd, buff, pos.col == -1 ? 8 : 6);
 }
