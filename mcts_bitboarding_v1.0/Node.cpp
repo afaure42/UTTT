@@ -2,10 +2,10 @@
 
 Node::Node()
 	: bigboard(0), action(), parent(), possible_moves(),
-	  wins(), visits(), terminal(false), possible_moves_size(), id(node_counter++){};
+	  value(), visits(), terminal(false), possible_moves_size(), id(node_counter++){};
 
 Node::Node(const bigboard_type &bigboard, const smallboard_type (&smallboards)[9])
-	: bigboard(bigboard), parent(), action(), wins(), visits(), terminal(false),
+	: bigboard(bigboard), parent(), action(), value(), visits(), terminal(false),
 	  possible_moves_size(), id(node_counter++)
 {
 	memcpy(this->smallboards, smallboards, sizeof(smallboard_type[9]));
@@ -16,7 +16,7 @@ Node::Node(const bigboard_type &bigboard, const smallboard_type (&smallboards)[9
 
 Node::Node(const bigboard_type &bigboard, const smallboard_type (&smallboards)[9],
 		   const smallboard_type &action, Node *parent)
-	: bigboard(bigboard), action(action), parent(parent), wins(), visits(), terminal(false),
+	: bigboard(bigboard), action(action), parent(parent), value(), visits(), terminal(false),
 	  possible_moves_size(), id(node_counter++)
 {
 	memcpy(this->smallboards, smallboards, sizeof(smallboard_type[9]));
@@ -28,7 +28,7 @@ Node::Node(const bigboard_type &bigboard, const smallboard_type (&smallboards)[9
 	if (isTerminal(this->bigboard))
 	{
 		// this->value = isWin(this->bigboard) ? 1 : (isLost(this->bigboard) ? 0 : 0.5);
-		this->wins = isWin(this->bigboard) ? 1 : 0;
+		this->value = isWin(this->bigboard) ? 1 : 0;
 		this->terminal = true;
 		this->visits = 1;
 	}
@@ -50,7 +50,8 @@ Node & Node::operator=(const Node &ref)
 	this->action = ref.action;
 	this->parent = ref.parent;
 	this->children = ref.children;
-	this->wins = ref.wins;
+	// this->wins = ref.wins;
+	this->value = ref.value;
 	this->visits = ref.visits;
 	this->id = ref.getId();
 	this->terminal = ref.terminal;
@@ -150,10 +151,10 @@ Node * Node::get_best_move()
 			return this->children[i];
 		}
 
-		if (this->children[i]->wins >= max_wins)
+		if (this->children[i]->value >= max_wins)
 		{
 			ret = this->children[i];
-			max_wins = ret->wins;
+			max_wins = ret->value;
 		}
 	}
 	// std::cerr << "Number of terminal childs during move choose:" << terminals << '\n';

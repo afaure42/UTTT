@@ -7,7 +7,7 @@ float ucb1(const Node &node)
 {
     if (node.visits == 0)
         return 0;
-    return ((float)node.wins / node.visits + C * sqrt(log(node.parent->visits) / node.visits));
+    return (node.value / (float)node.visits + C * sqrt(log(node.parent->visits) / node.visits));
 }
 
 Node * select_child(Node & node)
@@ -87,17 +87,17 @@ float rollout(
 	if (isLost(bigboard))
 		return 0;
     else
-        return 0;
+        return 0.5;
 }
 
 void update_path(Node * node)
 {
-    int wins = node->wins;
+    float value = node->value;
     node = node->parent;
 
     while(node != NULL)
     {
-        node->wins += wins;
+        node->value += value;
         ++node->visits;
         node = node->parent;
     }
@@ -131,7 +131,7 @@ void mcts_iteration(Node * node)
     if(!isTerminal(node->bigboard))
     {
         // std::cerr << "Starting Rollout" << std::endl;
-        node->wins = rollout(node->bigboard, node->smallboards, node->possible_moves, node->possible_moves_size);
+        node->value = rollout(node->bigboard, node->smallboards, node->possible_moves, node->possible_moves_size);
         node->visits = 1; 
     }
 
@@ -148,12 +148,18 @@ Node * mcts(Node * root, int max_time, clock_t start_time)
     int i = 0;
 
     // std::cerr << "Starting MCTS iterations\n";
+	#ifdef FIXED_ROLLOUT
+	while (i < ROLLOUT_PER_TURN)
+	#else
     while (elapsed_time(start_time) < max_time)
+	#endif
     {
         mcts_iteration(root);
         i++;
     }
 
     // std::cerr << "rollouts this turn: " << i << '\n';
+	total_rollouts += i;
+	turns++;
     return root->get_best_move();
 }

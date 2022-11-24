@@ -38,8 +38,8 @@ public:
     smallboard_type possible_moves[81];
 	int possible_moves_size;
     bool terminal;
-    // float value;
-	int wins;
+    float value;
+	// int wins;
     int visits;
 	int id;
 private:

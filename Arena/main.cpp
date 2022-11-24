@@ -44,7 +44,7 @@ arena::Board::e_result resolveGame(Player & player1, Player & player2)
 
 void do_game(char *argv[], std::mutex *vars_mutex)
 {
-	int swap;
+	int swap = 1;
 	while (true)
 	{
 		vars_mutex->lock();

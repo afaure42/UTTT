@@ -1,6 +1,8 @@
 #include "common.hpp"
 #pragma GCC optimize ("O3")
 
+char *name;
+
 using namespace std;
 //seed=510707828
 
@@ -35,6 +37,8 @@ using namespace std;
 uint_fast32_t to_index[257];
 bool debug = false;
 unsigned long node_counter = 0;
+int total_rollouts = 0;
+int	turns = 0;
 const uint_fast32_t wins[]
 {
     0b0000000000000111,
@@ -275,9 +279,20 @@ bool isLost(const bigboard_type & bigboard) {
     }
 }*/
 
+void sigint_handler(int sig)
+{
+	(void)sig;
+	// std::cerr << name << ":AVG ROLLOUTS:" << total_rollouts / turns << std::endl;
+	std::_Exit(1);
+	// throw std::exception();
+}
+
 int main(int argc, char **argv)
 {
-	try {
+	try
+	{
+	name = argv[0];
+	std::signal(SIGINT, sigint_handler);
 	to_index_init();
 	srand(time(NULL));
 	std::ofstream tree_file;
@@ -297,7 +312,6 @@ int main(int argc, char **argv)
     while (1) 
     {
 		current = root;
-		clock_t now = clock();
         cin >> opponent_row >> opponent_col; cin.ignore();
 		// cerr << argv[0] << ":input received:" << opponent_row << " " << opponent_col << std::endl;
         if (opponent_row != -1)
@@ -317,8 +331,14 @@ int main(int argc, char **argv)
 		else
 		{
 			current->bigboard &= ~LAST_PLAYER_MASK;
+			#ifdef CENTER_STRAT
+			current->possible_moves[0] = from_xy(4, 4);
+			current->possible_moves[0] |= TO_MOVE_MASK;
+			current->possible_moves_size = 1;
+			#else
 			current->possible_moves_size = list_actions(current->possible_moves,
 									current->bigboard, current->smallboards);
+			#endif
 		}
 
         int valid_action_count;
@@ -335,6 +355,7 @@ int main(int argc, char **argv)
 
         // std::cerr << "Before MCTS\n";
 		// print_bigboard(current->bigboard);
+		clock_t now = clock();
         current = mcts(current, 60, now);
 		// for(int i = 0; i < current->children.size(); i++)
 			// std::cerr << "[" << get_y_x(current->children[i]->action) << "]";
@@ -344,7 +365,7 @@ int main(int argc, char **argv)
 		// std::cerr << "Terminal nodes :" << terminal_nodes << '\n';
         // std:cerr << "Number of childs in best move node:" << current->children.size() << 
         // " score:" << current->wins << ", visits:" << current->visits << '\n';
-        print_nice_bigboard(current->smallboards, current->bigboard);
+        // print_nice_bigboard(current->smallboards, current->bigboard);
         // std::cerr << "LET ME GUESS" << std::endl;
         current->parent = NULL;
         // delete root;
@@ -354,10 +375,14 @@ int main(int argc, char **argv)
 
 		// cerr << "sending:" << get_y_x(current->action) << endl;
         cout << get_y_x(current->action) << endl;
+		// std::cerr << "AVG ROLLOUTS:" << total_rollouts / turns << std::endl;
     }
 	}
 	catch (std::exception & e)
 	{
-		std:: cerr << "EXCEPTION OCCURED: " << e.what() << std::endl;
+		// std::cerr << "EXCEPTION OCCURED: " << e.what() << std::endl;
+		std::cerr << "EXCEPTION OCCURED: " << std::endl;
+		std::_Exit(1);
 	}
+	std::cerr << "TEEEEST\n";
 }

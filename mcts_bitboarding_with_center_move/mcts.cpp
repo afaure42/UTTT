@@ -7,7 +7,7 @@ float ucb1(const Node &node)
 {
     if (node.visits == 0)
         return 0;
-    return ((float)node.wins / node.visits + C * sqrt(log(node.parent->visits) / node.visits));
+    return (node.wins / (float)node.visits + C * sqrt(log(node.parent->visits) / node.visits));
 }
 
 Node * select_child(Node & node)
@@ -148,12 +148,18 @@ Node * mcts(Node * root, int max_time, clock_t start_time)
     int i = 0;
 
     // std::cerr << "Starting MCTS iterations\n";
+	#ifdef FIXED_ROLLOUT
+	while (i < ROLLOUT_PER_TURN)
+	#else
     while (elapsed_time(start_time) < max_time)
+	#endif
     {
         mcts_iteration(root);
         i++;
     }
 
     // std::cerr << "rollouts this turn: " << i << '\n';
+	total_rollouts += i;
+	turns++;
     return root->get_best_move();
 }

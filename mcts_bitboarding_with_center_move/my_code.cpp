@@ -1,6 +1,7 @@
 #include "common.hpp"
 #pragma GCC optimize ("O3")
 
+char * name;
 using namespace std;
 //seed=510707828
 
@@ -35,6 +36,8 @@ using namespace std;
 uint_fast32_t to_index[257];
 bool debug = false;
 unsigned long node_counter = 0;
+int total_rollouts = 0;
+int turns = 0;
 const uint_fast32_t wins[]
 {
     0b0000000000000111,
@@ -275,9 +278,18 @@ bool isLost(const bigboard_type & bigboard) {
     }
 }*/
 
+void sigint_handler(int sig)
+{
+	(void)sig;
+	// std::cerr << name << ":AVG ROLLOUTS:" << total_rollouts / turns << std::endl;
+	std::_Exit(1);
+}
+
 int main(int argc, char **argv)
 {
+	std::signal(SIGINT, sigint_handler);
 	try {
+	name = argv[0];
 	to_index_init();
 	srand(time(NULL));
 	std::ofstream tree_file;
@@ -297,7 +309,6 @@ int main(int argc, char **argv)
     while (1) 
     {
 		current = root;
-		clock_t now = clock();
         cin >> opponent_row >> opponent_col; cin.ignore();
 		// cerr << argv[0] << ":input received:" << opponent_row << " " << opponent_col << std::endl;
         if (opponent_row != -1)
@@ -336,12 +347,13 @@ int main(int argc, char **argv)
 
         // std::cerr << "Before MCTS\n";
 		// print_bigboard(current->bigboard);
+		clock_t now = clock();
         current = mcts(current, 60, now);
 		// for(int i = 0; i < current->children.size(); i++)
 			// std::cerr << "[" << get_y_x(current->children[i]->action) << "]";
 		// std::cerr << '\n';
 		
-		dump_tree(tree_file, *permanent_root);
+		// dump_tree(tree_file, *permanent_root);
 		// std::cerr << "Terminal nodes :" << terminal_nodes << '\n';
         // std:cerr << "Number of childs in best move node:" << current->children.size() << 
         // " score:" << current->wins << ", visits:" << current->visits << '\n';
@@ -355,9 +367,9 @@ int main(int argc, char **argv)
 
 		// cerr << "sending:" << get_y_x(current->action) << endl;
         cout << get_y_x(current->action) << endl;
-		if (opponent_col == -1)
-			print_nice_bigboard(current->smallboards, current->bigboard);
-    }
+		// if (opponent_col == -1)
+			// print_nice_bigboard(current->smallboards, current->bigboard);
+	}
 	}
 	catch (std::exception & e)
 	{

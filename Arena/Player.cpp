@@ -35,6 +35,9 @@ Player::Player(std::string path_to_exec)
 
 Player::~Player()
 {
+	if (this->_pid != -1)
+		this->stopPlayer();
+
 	close_pipe(this->_pipe_in);
 	close_pipe(this->_pipe_out);
 
@@ -42,8 +45,6 @@ Player::~Player()
 		close(this->_in_fd);
 	if (this->_in_fd != -1)
 		close(this->_out_fd);
-	if (this->_pid != -1)
-		this->stopPlayer();
 }
 
 void Player::launchPlayer(char *name)
@@ -94,7 +95,7 @@ void Player::stopPlayer(void)
 
 void Player::_killProcess(void)
 {
-	kill(this->_pid, SIGKILL);
+	kill(this->_pid, SIGINT);
 }
 
 void Player::_waitProcess(void)

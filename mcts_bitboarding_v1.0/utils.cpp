@@ -87,11 +87,13 @@ void print_nice_action(const smallboard_type & action)
 	<< std::endl;
 }
 
-void dump_node(Node & node, std::ofstream & myfile)
+void dump_node(Node & node, std::ofstream & myfile, int deep)
 {
+	if (--deep <= 0)
+		return;
 	myfile << '\t' << node.getId() << "[label=\"[" << get_y_x(node.action) << "]\n"
 	<<"P=" << ((node.bigboard & LAST_PLAYER_MASK) ? "o" : "x") 
-	<< "W=" << node.wins << ";V=" << node.visits<< '\"';
+	<< "W=" << node.value << ";V=" << node.visits<< '\"';
 	if (isTerminal(node.bigboard))
 	{
 		myfile << " color=\"";
@@ -108,7 +110,7 @@ void dump_node(Node & node, std::ofstream & myfile)
 		myfile << '\t' << node.getId() << " -> " << node.children[i]->getId() << std::endl;
 	}
 	for (int i = 0; i < node.children.size(); i++) {
-		dump_node(*(node.children[i]), myfile);
+		dump_node(*(node.children[i]), myfile, deep);
 	}
 }
 
@@ -119,7 +121,7 @@ void dump_tree(std::ofstream & myfile, Node & root)
 	myfile << "strict digraph {\n";
 	myfile << "\tnode [shape=\"rect\"]\n";
 
-	dump_node(root, myfile);
+	dump_node(root, myfile, 3);
 
 	myfile << "}";
 	myfile.close();

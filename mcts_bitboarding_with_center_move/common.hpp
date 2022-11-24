@@ -13,6 +13,7 @@
 #include <math.h>
 #include <bitset>
 #include <fstream>
+#include <csignal>
 #include "Node.hpp"
 
 class Node;
@@ -25,6 +26,8 @@ extern uint_fast32_t to_index[257];
 extern const uint_fast32_t wins[];
 extern unsigned long node_counter;
 extern bool debug;
+extern int total_rollouts;
+extern int turns;
 
 //BINARY DEFINES
 //    0 1 2
@@ -111,7 +114,17 @@ std::string get_y_x(const smallboard_type & action);
 /*		MCTS 		*/
 /********************/
 
+#ifndef ROLLOUT_PER_TURN
+# define ROLLOUT_PER_TURN 100000
+#endif
+
+#ifndef MS_PER_TURN
+# define MS_PER_TURN 60
+#endif
+
+#ifndef C
 #define C               0.7f
+#endif
 float ucb1(const Node &node);
 Node * select_child(Node & node);
 float rollout(

@@ -19,7 +19,7 @@ arena::Board::e_result arena::Board::applyAction(t_pos move, bool player)
 	
 	this->_grid[move.row][move.col] = player ? PLAYER1 : PLAYER2;
 
-	small_board_state = this->_getBoardState(move.row - move.row % 3, move.col - move.col % 3, player, this->_grid);
+	small_board_state = this->_getBoardState(move.row - (move.row % 3), move.col - (move.col % 3), player, this->_grid);
 	this->_finished_grids[move.row / 3][move.col / 3] = small_board_state;	
 
 	if (small_board_state != NOTHING)

@@ -13,6 +13,9 @@
 #include <math.h>
 #include <bitset>
 #include <fstream>
+#include <csignal>
+#include <cstdlib>
+#include <cstdio>
 #include "Node.hpp"
 
 class Node;
@@ -25,6 +28,8 @@ extern uint_fast32_t to_index[257];
 extern const uint_fast32_t wins[];
 extern unsigned long node_counter;
 extern bool debug;
+extern int	turns;
+extern int	total_rollouts;
 
 //BINARY DEFINES
 //    0 1 2
@@ -94,7 +99,7 @@ bool isLost(const bigboard_type & bigboard);
 /**************/
 //		PRINT
 void print_nice_action(const smallboard_type & action);
-void dump_node(Node & node, std::ofstream & myfile);
+void dump_node(Node & node, std::ofstream & myfile, int deep);
 void dump_tree(std::ofstream & myfile, Node & root);
 void print_bigboard(bigboard_type & bigboard);
 void print_nice_bigboard(const smallboard_type *boards, const bigboard_type bigboard);
@@ -111,7 +116,18 @@ std::string get_y_x(const smallboard_type & action);
 /*		MCTS 		*/
 /********************/
 
+#ifndef C
 #define C               0.7f
+#endif
+
+#ifndef ROLLOUT_PER_TURN
+# define ROLLOUT_PER_TURN 100000
+#endif
+
+#ifndef MS_PER_TURN
+# define MS_PER_TURN 60
+#endif
+
 float ucb1(const Node &node);
 Node * select_child(Node & node);
 float rollout(
