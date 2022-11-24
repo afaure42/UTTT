@@ -27,8 +27,8 @@ Node::Node(const bigboard_type &bigboard, const smallboard_type (&smallboards)[9
 
 	if (isTerminal(this->bigboard))
 	{
-		// this->value = isWin(this->bigboard) ? 1 : (isLost(this->bigboard) ? 0 : 0.5);
-		this->value = isWin(this->bigboard) ? 1 : 0;
+		this->value = isWin(this->bigboard) ? 1 : (isLost(this->bigboard) ? 0 : 0.5);
+		// this->value = isWin(this->bigboard) ? 1 : 0;
 		this->terminal = true;
 		this->visits = 1;
 	}

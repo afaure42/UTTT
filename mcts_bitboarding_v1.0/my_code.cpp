@@ -311,6 +311,7 @@ int main(int argc, char **argv)
     // game loop
     while (1) 
     {
+		clock_t now = clock();
 		current = root;
         cin >> opponent_row >> opponent_col; cin.ignore();
 		// cerr << argv[0] << ":input received:" << opponent_row << " " << opponent_col << std::endl;
@@ -355,7 +356,6 @@ int main(int argc, char **argv)
 
         // std::cerr << "Before MCTS\n";
 		// print_bigboard(current->bigboard);
-		clock_t now = clock();
         current = mcts(current, 60, now);
 		// for(int i = 0; i < current->children.size(); i++)
 			// std::cerr << "[" << get_y_x(current->children[i]->action) << "]";
@@ -380,9 +380,7 @@ int main(int argc, char **argv)
 	}
 	catch (std::exception & e)
 	{
-		// std::cerr << "EXCEPTION OCCURED: " << e.what() << std::endl;
-		std::cerr << "EXCEPTION OCCURED: " << std::endl;
-		std::_Exit(1);
+		std::cerr << "EXCEPTION OCCURED: " << e.what() << std::endl;
+		// std::cerr << "EXCEPTION OCCURED: " << std::endl;
 	}
-	std::cerr << "TEEEEST\n";
 }
