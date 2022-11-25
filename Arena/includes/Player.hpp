@@ -2,20 +2,22 @@
 #define PLAYER_HPP
 
 #include "common.hpp"
-#include "t_pos.hpp"
+// #include "t_pos.hpp"
+#include "IAction.hpp"
 
 namespace arena
 {
-template<typename Action_t>
 class Player
 {
 public:
 	Player(std::string path_to_exec);
 	~Player();
 
-	Action_t	recvPos();
+	template<typename Action_t>
+	Action_t	recvAction();
 
-	void		sendPos(const Action_t & pos);
+	template<typename Action_t>
+	void		sendAction(const Action_t & action);
 
 	void		launchPlayer(char *name);
 	void		stopPlayer(void);
