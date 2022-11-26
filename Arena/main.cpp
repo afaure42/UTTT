@@ -13,35 +13,6 @@ size_t player2_first;
 size_t draws;
 int number_of_games;
 
-arena::Board::e_result resolveGame(Player & player1, Player & player2)
-{
-	arena::Board board;
-	arena::t_pos current(-1, -1);
-
-	player1.launchPlayer(name1);
-	player2.launchPlayer(name2);
-
-	player1.sendPos(current);
-	while(1)
-	{
-		current = player1.recvPos();
-		if (board.applyAction(current, true) != Board::NOTHING)
-			break;
-		// board.printBoard();
-		// board.printSmallBoard();
-		player2.sendPos(current);
-		current = player2.recvPos();
-		if (board.applyAction(current, false) != Board::NOTHING)
-			break;
-		// board.printBoard();
-		// board.printSmallBoard();
-		player1.sendPos(current);
-	}
-	// board.printBoard();
-	// board.printSmallBoard();
-	return board.getResult();
-}
-
 void do_game(char *argv[], std::mutex *vars_mutex)
 {
 	int swap = 1;
@@ -57,8 +28,6 @@ void do_game(char *argv[], std::mutex *vars_mutex)
 		number_of_games--;
 		vars_mutex->unlock();
 
-		Player player1(argv[1]);
-		Player player2(argv[2]);
 		arena::Board::e_result result;
 
 
@@ -107,6 +76,8 @@ int main(int argc, char *argv[])
 	
 	number_of_games = std::atoi(argv[3]);
 	int number_of_thread = std::atoi(argv[4]);
+
+	
 	player1_wins = 0;
 	player2_wins = 0;
 	player1_first = 0;
@@ -133,9 +104,6 @@ int main(int argc, char *argv[])
 	}
 
 
-	std::cout << "Player 1 Wins:" << player1_wins << "; Player 1 starts:" << player1_first << '\n'
-		<< "Player 2 Wins:" << player2_wins << "; Player 2 starts:" << player2_first << '\n'
-		<< "Draws:" << draws << std::endl;
 
 	return (EXIT_SUCCESS);
 }

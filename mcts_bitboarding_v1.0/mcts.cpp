@@ -113,11 +113,11 @@ void mcts_iteration(Node * node)
     while(node->possible_moves_size == 0 && !isTerminal(node->bigboard))
         node = select_child(*node);
 
-	if (isTerminal(node->bigboard))
-	{
-		terminal_nodes++;
+	// if (isTerminal(node->bigboard))
+	// {
+		// terminal_nodes++;
 		// std::cerr << node->id << '\n';
-	}
+	// }
 
 	// std::cerr << "Selection finished" << std::endl;
     if (!isTerminal(node->bigboard))

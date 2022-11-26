@@ -87,6 +87,7 @@ void print_nice_action(const smallboard_type & action)
 	<< std::endl;
 }
 
+
 void dump_node(Node & node, std::ofstream & myfile, int deep)
 {
 	if (--deep <= 0)

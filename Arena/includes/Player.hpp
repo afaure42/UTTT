@@ -4,6 +4,7 @@
 #include "common.hpp"
 // #include "t_pos.hpp"
 #include "IAction.hpp"
+#include "IUpdate.hpp"
 
 namespace arena
 {
@@ -11,13 +12,26 @@ class Player
 {
 public:
 	Player(std::string path_to_exec);
-	~Player();
+	Player(const player & ref);
+	~Player(void);
 
-	template<typename Action_t>
-	Action_t	recvAction();
+	/**
+	 * @brief this will call the function set from the
+	 * given action with the fd corresponding
+	 * to this player's output
+	 * 
+	 * @param action a reference an action class
+	 */
+	void		recvAction(IAction & action);
 
-	template<typename Action_t>
-	void		sendAction(const Action_t & action);
+	/**
+	 * @brief this will call the function str from
+	 * the given update and write the output to
+	 * this player's input
+	 * 
+	 * @param update a const reference to an update class
+	 */
+	void		sendUpdate(const IUpdate & update);
 
 	void		launchPlayer(char *name);
 	void		stopPlayer(void);

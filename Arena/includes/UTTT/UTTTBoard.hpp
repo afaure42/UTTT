@@ -2,6 +2,10 @@
 # define UTTTBOARD_HPP
 
 #include "IBoard.hpp"
+#include <mutex>
+#include "UTTTAction.hpp"
+#include "UTTTUpdate.hpp"
+#include "customExceptions.hpp"
 
 namespace arena
 {
@@ -16,17 +20,37 @@ public:
 		PLAYER1,
 		PLAYER2
 	};
+	struct t_pos
+	{
+		t_pos();
+		t_pos(const t_pos & ref);
+		t_pos(int col, int row);
+		t_pos & operator=(const t_pos & rhs);
 
-	UTTBBoard *	clone(void) override const;
-	void		printTotalResults(void) override const;
-	void		resolveGame(Player *) override;
-	void		getPlayerSize(void) override const;
-	void		print(void) override const;
+		int col;
+		int row;
+	};
 
+	UTTTBoard();
+	~UTTTBoard();
+
+	arena::IBoard *		clone(void) const override;
+	std::ostream &		printTotalResults(std::ostream & os) const override;
+	void				clearTotalResults(void) override;
+	void				updateResult(void) override;
+	int					getGamesPlayed(void) const override;
+
+	void				resolveGame(std::vector<std::string> & players) override;
+	void				clearBoard(void) override;
+
+	int					getPlayerSize(void) const override;
+	std::ostream &		write(std::ostream & os) const override;
 private:
 	static int _s_player1_wins;
 	static int _s_player2_wins;
 	static int _s_draws;
+	static int _s_games;
+	static std::mutex _s_vars_mutex;
 
 	/**
 	 * @brief function to apply a move to the board ( MUST BE VALID )
@@ -38,11 +62,11 @@ private:
 	e_result			_applyAction(t_pos move, bool player);
 
 	/**
-	 * @brief function to get the possible actions after a move has been applied
+	 * @brief function to get the possible moves
 	 * 
 	 * @return a std::vector<t_pos> containing all the possible positions
 	 */
-	std::vector<t_pos>	_listActions(void) const;
+	std::vector<t_pos>	_listLegalMoves(void) const;
 
 
 

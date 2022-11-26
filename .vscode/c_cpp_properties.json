@@ -3,7 +3,10 @@
         {
             "name": "Linux",
             "includePath": [
-                "${default}"
+                "${default}",
+                "${workspaceFolder}",
+                "/sgoinfre/goinfre/Perso/afaure/xubuntu/codingame/UTTT/Arena/includes/UTTT",
+                "/sgoinfre/goinfre/Perso/afaure/xubuntu/codingame/UTTT/Arena/includes"
             ],
             "defines": [],
             "compilerPath": "/usr/bin/clang",

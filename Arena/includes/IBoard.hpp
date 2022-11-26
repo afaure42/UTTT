@@ -1,7 +1,13 @@
 #ifndef IBOARD_HPP
 #define IBOARD_HPP
 
+#include <iostream>
+#include <string>
+#include <vector>
+#include <exception>
+
 #include "Player.hpp"
+
 namespace arena
 {
 	/**
@@ -19,6 +25,7 @@ namespace arena
 	public:
 		virtual ~IBoard();
 
+		
 		/**
 		 * @brief function to return new instance of current board
 		 *  it will use the new operator so it will have to be freed
@@ -29,27 +36,49 @@ namespace arena
 		/**
 		 * @brief function to print the results of all
 		 * games played on this board type so far
+		 * it MUST be thread-safe
 		 */
-		virtual void	printResults(void) const = 0;
-
-		/**
-		 * @brief function to play a game on this board
-		 * will update the internal static values relative to the
-		 * result of this game
-		 * @param players array of players
-		 */
-		virtual void	resolveGame(Player * players) = 0;
+		virtual std::ostream &	printTotalResults(std::ostream & os) const = 0;
 
 		/**
 		 * @brief function to clear the static values 
 		 * of all games played on this board type
+		 * it MUST be thread-safe
 		 */
-		virtual void	clearResults(void) = 0;
-		
+		virtual void	clearTotalResults(void) = 0;
+
+		/**
+		 * @brief this function will update the static values acording
+		 * to the result of the last game
+		 */
+		virtual void	updateResult(void) = 0;
+
+		/**
+		 * @brief Get the number of games played since last clear
+		 * @return int 
+		 */
+		virtual int		getGamesPlayed(void) const = 0;
+
+		/**
+		 * @brief function to play a game on this board
+		 * will save internally the result of the game
+		 * it MUST be thread-safe
+		 * @param players a vector containing the pathes to player binaries
+		 */
+		virtual void	resolveGame(std::vector<std::string> & players) = 0;
+
+		/**
+		 * @brief function to clear a board so that it can receive
+		 * a new call to resolveGame
+		 * it MUST be thread-safe
+		 */
+		virtual void	clearBoard(void) = 0;
+
 		/**
 		 * @brief Get the number of players needed for this game
+		 * it MUST be thread-safe
 		 * 
-		 * @return 
+		 * @return an int
 		 */
 		virtual int		getPlayerSize(void) const = 0;
 
@@ -58,8 +87,28 @@ namespace arena
 		 * with or without debug info it is up
 		 * to the implementor
 		 */
-		virtual void	print(void) const = 0;
-	}
+		virtual std::ostream & write(std::ostream & os) const = 0;
+
+
+		/*				EXCEPTIONS				*/
+
+
+
+		class BoardNotEmpty : public std::exception
+		{
+
+		}
+
+		class BadPlayerCount : public std::exception
+		{
+
+		}
+	};
+}
+
+std::ostream & operator<<(std::ostream & os, const arena::IBoard & board)
+{
+	return board.write(os);
 }
 
 #endif

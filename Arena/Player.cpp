@@ -91,6 +91,7 @@ void Player::stopPlayer(void)
 {
 	this->_killProcess();
 	this->_waitProcess();
+	this->_pid = -1;
 }
 
 void Player::_killProcess(void)

@@ -2,7 +2,6 @@
 #define BOARD_HPP
 
 #include "common.hpp"
-#include "t_pos.hpp"
 
 class t_pos;
 namespace arena
