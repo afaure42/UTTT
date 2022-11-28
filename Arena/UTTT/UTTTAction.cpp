@@ -12,7 +12,7 @@ UTTTAction::UTTTAction()
 
 }
 
-UTTTAction::UTTTAction(const UTTTBoard::t_pos & pos)
+UTTTAction::UTTTAction(const t_pos & pos)
 :_pos(pos)
 {
 }
@@ -25,9 +25,11 @@ UTTTAction::UTTTAction(const UTTTAction & other)
 UTTTAction & UTTTAction::operator=(const UTTTAction & rhs)
 {
 	this->_pos = rhs.getPos();
+
+	return *this;
 }
 
-IAction *	UTTTAction::clone() const override
+IAction *	UTTTAction::clone() const
 {
 	return new UTTTAction(*this);
 }
@@ -39,7 +41,7 @@ void		UTTTAction::set(const int & fd)
 	for(int i = 0; i < 128; i++)
 	{
 		if (read(fd, buff + i, 1) < 0)
-			throw arena::syscal_error(errno, "UTTTAction: set: read:");
+			throw arena::syscall_error(errno, "UTTTAction: set: read:");
 		if (buff[i] == '\n')
 		{
 			buff[i + 1] = '\0';
@@ -51,12 +53,17 @@ void		UTTTAction::set(const int & fd)
 	this->_pos.col = buff[2] - '0';
 }
 
-UTTTBoard & UTTTAction::getPos(void)
+t_pos & UTTTAction::getPos(void)
 {
 	return this->_pos;
 }
 
-void		UTTTAction::setPos(UTTTBoard & pos)
+const t_pos & UTTTAction::getPos(void) const
+{
+	return this->_pos;
+}
+
+void		UTTTAction::setPos(t_pos & pos)
 {
 	this->_pos = pos;
 }

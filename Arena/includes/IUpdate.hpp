@@ -9,10 +9,10 @@ namespace arena
 class IUpdate
 {
 public:
-	virutal ~IUpdate();
+	virtual ~IUpdate(){};
 
 	virtual std::string str(void) const = 0;
-}
+};
 
 }
 

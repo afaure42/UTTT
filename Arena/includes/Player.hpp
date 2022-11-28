@@ -12,7 +12,7 @@ class Player
 {
 public:
 	Player(std::string path_to_exec);
-	Player(const player & ref);
+	Player(const Player & ref);
 	~Player(void);
 
 	/**
@@ -33,7 +33,7 @@ public:
 	 */
 	void		sendUpdate(const IUpdate & update);
 
-	void		launchPlayer(char *name);
+	void		launchPlayer();
 	void		stopPlayer(void);
 
 	class playerNotLaunchedException : public std::exception

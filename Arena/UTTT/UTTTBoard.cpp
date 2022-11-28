@@ -2,25 +2,35 @@
 
 using namespace arena;
 
+int UTTTBoard::_s_player1_wins = 0;
+int UTTTBoard::_s_player2_wins = 0;
+int UTTTBoard::_s_draws = 0;
+int UTTTBoard::_s_games = 0;
+std::mutex UTTTBoard::_s_vars_mutex;
+
 UTTTBoard::UTTTBoard()
 :_finished(), _result(), _last_move()
 {
-	memset(this->_finished_grids, '\0', sizeof(Board::e_result) * 9);
-	memset(this->_grid, '\0', sizeof(Board::e_result) * 81);
+	memset(this->_finished_grids, '\0', sizeof(UTTTBoard::e_result) * 9);
+	memset(this->_grid, '\0', sizeof(UTTTBoard::e_result) * 81);
 }
 
-IBoard *		UTTTBoard::clone(void) const override {
-	return new UTTBoard();
+IBoard *		UTTTBoard::clone(void) const {
+	return new UTTTBoard();
 }
 
-std::ostream	UTTTBoard::printTotalResults(std::ostream & os) override const
+std::ostream	& UTTTBoard::printTotalResults(std::ostream & os) const
 {
-	os "Player 1 Wins:" << this->_player1_wins << "; Player 1 starts:" << player1_first << '\n'
-		<< "Player 2 Wins:" << player2_wins << "; Player 2 starts:" << player2_first << '\n'
-		<< "Draws:" << draws << std::endl;
+	this->_s_vars_mutex.lock();
+	os << "Player 1 Wins:" << this->_s_player1_wins //<< "; Player 1 starts:" << this->_s_player1_first << '\n'
+		<< "\nPlayer 2 Wins:" << this->_s_player2_wins //<< "; Player 2 starts:" << this->_s_player2_first << '\n'
+		<< "\nDraws:" << this->_s_draws << std::endl
+		<< "Games:" << this->_s_games << std::endl;
+	this->_s_vars_mutex.unlock();
+	return os;
 }
 
-void			UTTTBoard::clearTotalResults(void) override
+void			UTTTBoard::clearTotalResults(void)
 {
 	this->_s_vars_mutex.lock();
 	this->_s_player1_wins = 0;
@@ -29,13 +39,13 @@ void			UTTTBoard::clearTotalResults(void) override
 	this->_s_vars_mutex.unlock();
 }
 
-void			UTTTBoard::resolveGame(std::vector<std:string> & players) override
+void			UTTTBoard::resolveGame(const std::vector<std::string> & players)
 {
 	if (players.size() != 2)
 		throw (IBoard::BadPlayerCount());
 	
-	UTTTAction current(UTTTBoard::t_pos(-1, -1));
-	UTTTUpdate update();
+	UTTTAction current(t_pos(-1, -1));
+	UTTTUpdate update;
 
 	Player player1(players[0]);
 	Player player2(players[1]);
@@ -49,43 +59,59 @@ void			UTTTBoard::resolveGame(std::vector<std:string> & players) override
 	{
 		//receiving action from player 1 and applying it to the board
 		player1.recvAction(current);
-		if (this->_applyAction(current, true) != UTTTBoard::NOTHING)
+		if (this->_applyAction(current.getPos(), true) != UTTTBoard::NOTHING)
 			break;
 
 		//creating an update for player 2 and sending it
-		update.setPos(current.getPos);
+		update.setPos(current.getPos());
 		update.setMoves(this->_listLegalMoves());
 		player2.sendUpdate(update);
 
 
 		//receiving action from player 2 and applying it to the board
 		player2.recvAction(current);
-		if (this->_applyAction(current, false) != UTTTBoard::NOTHING)
+		if (this->_applyAction(current.getPos(), false) != UTTTBoard::NOTHING)
 			break;
 
 		//creating an update for player 1 and sending it
-		update.setPos(current.getPos);
+		update.setPos(current.getPos());
 		update.setMoves(this->_listLegalMoves());
 		player1.sendUpdate(update);
 	}
 
-	this->_s_vars_mutex.lock();
+	this->_updateResult();
+	// this->_s_vars_mutex.lock();
 	//update the static values
+	// this->_s_vars_mutex.unlock();
+}
+void			UTTTBoard::clearBoard(void)
+{
+}
+
+int				UTTTBoard::getPlayerSize(void) const {
+	return 2;
+}
+int	&			UTTTBoard::getGamesPlayed(void) {
+	return this->_s_games;
+}
+
+void			UTTTBoard::_updateResult(void)
+{
+	this->_s_vars_mutex.lock();
+	this->_s_games++;
+	if (this->_result == PLAYER1)
+		this->_s_player1_wins++;
+	else if (this->_result == PLAYER2)
+		this->_s_player2_wins++;
+	else
+		this->_s_draws++;
 	this->_s_vars_mutex.unlock();
 }
 
-void			UTTTBoard::clearBoard(void) override
+UTTTBoard::e_result		UTTTBoard::_applyAction(t_pos move, bool player)
 {
-}
-
-int				UTTTBoard::getPlayerSize(void) override const {
-	return 2;
-}
-
-e_result		UTTTBoard::_applyAction(t_pos move, bool player)
-{
-	e_result ret = NOTHING;
-	e_result small_board_state = NOTHING;
+	UTTTBoard::e_result ret = NOTHING;
+	UTTTBoard::e_result small_board_state = NOTHING;
 	
 	this->_grid[move.row][move.col] = player ? PLAYER1 : PLAYER2;
 
@@ -114,9 +140,9 @@ std::ostream &	UTTTBoard::write(std::ostream & os) const
 	{
 		for (int col = 0; col < 9; col++)
 		{
-			if (ref._grid[row][col] == arena::UTTTBoard::PLAYER1)
+			if (this->_grid[row][col] == arena::UTTTBoard::PLAYER1)
 				os << 'o';
-			else if (ref._grid[row][col] == arena::UTTTBoard::PLAYER2)
+			else if (this->_grid[row][col] == arena::UTTTBoard::PLAYER2)
 				os << 'x';
 			else
 				os << ' ';

@@ -1,10 +1,8 @@
 #ifndef UTTTBOARD_HPP
 # define UTTTBOARD_HPP
 
-#include "IBoard.hpp"
 #include <mutex>
-#include "UTTTAction.hpp"
-#include "UTTTUpdate.hpp"
+#include "UTTT.hpp"
 #include "customExceptions.hpp"
 
 namespace arena
@@ -20,16 +18,6 @@ public:
 		PLAYER1,
 		PLAYER2
 	};
-	struct t_pos
-	{
-		t_pos();
-		t_pos(const t_pos & ref);
-		t_pos(int col, int row);
-		t_pos & operator=(const t_pos & rhs);
-
-		int col;
-		int row;
-	};
 
 	UTTTBoard();
 	~UTTTBoard();
@@ -37,10 +25,9 @@ public:
 	arena::IBoard *		clone(void) const override;
 	std::ostream &		printTotalResults(std::ostream & os) const override;
 	void				clearTotalResults(void) override;
-	void				updateResult(void) override;
-	int					getGamesPlayed(void) const override;
+	int	&				getGamesPlayed(void) override;
 
-	void				resolveGame(std::vector<std::string> & players) override;
+	void				resolveGame(const std::vector<std::string> & players) override;
 	void				clearBoard(void) override;
 
 	int					getPlayerSize(void) const override;
@@ -68,7 +55,7 @@ private:
 	 */
 	std::vector<t_pos>	_listLegalMoves(void) const;
 
-
+	void				_updateResult(void);
 
 	template <typename T, size_t N, size_t M>
 	e_result _getBoardState(int row, int col, bool last_player,

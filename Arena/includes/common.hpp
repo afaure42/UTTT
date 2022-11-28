@@ -18,8 +18,11 @@
 #include <thread>
 #include <mutex>
 
+#include <functional> //std::ref
 
-#include "Board.hpp"
+#include "IAction.hpp"
+#include "IUpdate.hpp"
+#include "IBoard.hpp"
 #include "Player.hpp"
 #include "customExceptions.hpp"
 #include "utils.hpp"

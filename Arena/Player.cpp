@@ -47,7 +47,7 @@ Player::~Player()
 		close(this->_out_fd);
 }
 
-void Player::launchPlayer(char *name)
+void Player::launchPlayer()
 {
 	this->_in_fd = dup(this->_pipe_in[READ_END]);
 	if (_in_fd < 0)
@@ -79,8 +79,8 @@ void Player::launchPlayer(char *name)
 			throw(arena::syscall_error(errno, "CHILD: Player::launchPlayer: dup2:"));
 	
 		char **args = (char **)malloc(2 * sizeof(char*));
-		args[0] = name;
-		args[1] = NULL;
+		// args[0] = name;
+		args[0] = NULL;
 
 		if (execvp(this->_path.c_str(), args) < 0)
 			throw(arena::syscall_error(errno, "CHILD: Player::launchPlayer: execvp:"));
@@ -104,52 +104,13 @@ void Player::_waitProcess(void)
 	waitpid(this->_pid, NULL, 0);
 }
 
-arena::t_pos Player::recvPos()
+void	Player::recvAction(arena::IAction & action)
 {
-	t_pos ret;
-	char buff[8];
-	
-	for(int i = 0;;i++)
-	{
-		read(this->_in_fd, buff + i, 1);
-		if (buff[i] == '\n')
-		{
-			buff[i + 1] = '\0';
-			break;
-		}
-	}
-
-	ret.row = buff[0] - '0';
-	ret.col = buff[2] - '0';
-	return ret;
+	action.set(this->_in_fd);
 }
 
-void Player::sendPos(arena::t_pos & pos)
+void	Player::sendUpdate(const arena::IUpdate & update)
 {
-	char buff[9];
-	if (pos.col == -1)
-	{
-		buff[0] = '-';
-		buff[1] = '1';
-		buff[2] = ' ';
-		buff[3] = '-';
-		buff[4] = '1';
-		buff[5] = '\n';
-		buff[6] = '0';
-		buff[7] = '\n';
-		buff[8] = '\0';
-	}
-	else
-	{
-		buff[0] = '0' + pos.row;
-		buff[1] = ' ';
-		buff[2] = '0' + pos.col;
-		buff[3] = '\n';
-		buff[4] = '0';
-		buff[5] = '\n';
-		buff[6] = '\0';
-	}
-
-	// std::cout << buff << '\n';
-	write(this->_out_fd, buff, pos.col == -1 ? 8 : 6);
+	std::string str = update.str();
+	write(this->_out_fd, str.c_str(), str.length());
 }

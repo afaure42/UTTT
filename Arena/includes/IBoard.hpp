@@ -23,7 +23,7 @@ namespace arena
 	class IBoard
 	{
 	public:
-		virtual ~IBoard();
+		virtual ~IBoard(){};
 
 		
 		/**
@@ -36,47 +36,36 @@ namespace arena
 		/**
 		 * @brief function to print the results of all
 		 * games played on this board type so far
-		 * it MUST be thread-safe
 		 */
 		virtual std::ostream &	printTotalResults(std::ostream & os) const = 0;
 
 		/**
 		 * @brief function to clear the static values 
 		 * of all games played on this board type
-		 * it MUST be thread-safe
 		 */
 		virtual void	clearTotalResults(void) = 0;
 
 		/**
-		 * @brief this function will update the static values acording
-		 * to the result of the last game
-		 */
-		virtual void	updateResult(void) = 0;
-
-		/**
-		 * @brief Get the number of games played since last clear
+		 * @brief Get a ref to the number of games played since last clear
 		 * @return int 
 		 */
-		virtual int		getGamesPlayed(void) const = 0;
+		virtual int		& getGamesPlayed(void) = 0;
 
 		/**
 		 * @brief function to play a game on this board
 		 * will save internally the result of the game
-		 * it MUST be thread-safe
 		 * @param players a vector containing the pathes to player binaries
 		 */
-		virtual void	resolveGame(std::vector<std::string> & players) = 0;
+		virtual void	resolveGame(const std::vector<std::string> & players) = 0;
 
 		/**
 		 * @brief function to clear a board so that it can receive
 		 * a new call to resolveGame
-		 * it MUST be thread-safe
 		 */
 		virtual void	clearBoard(void) = 0;
 
 		/**
 		 * @brief Get the number of players needed for this game
-		 * it MUST be thread-safe
 		 * 
 		 * @return an int
 		 */
@@ -96,13 +85,15 @@ namespace arena
 
 		class BoardNotEmpty : public std::exception
 		{
-
-		}
+		public:
+			const char * what () const throw ();
+		};
 
 		class BadPlayerCount : public std::exception
 		{
-
-		}
+		public:
+			const char * what () const throw ();
+		};
 	};
 }
 

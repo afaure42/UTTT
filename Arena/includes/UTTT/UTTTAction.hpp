@@ -1,8 +1,8 @@
 #ifndef UTTTACTION_HPP
 #define UTTTACTION_HPP
 
-#include "IAction.hpp"
-#include "UTTTBoard.hpp"
+
+#include "UTTT.hpp"
 
 namespace arena
 {
@@ -12,7 +12,7 @@ class UTTTAction : public IAction
 public:
 	~UTTTAction();
 	UTTTAction();
-	UTTTAction(const UTTTBoard::t_pos & pos);
+	UTTTAction(const arena::t_pos & pos);
 	UTTTAction(const UTTTAction & other);
 
 	UTTTAction & operator=(const UTTTAction & rhs);
@@ -21,12 +21,13 @@ public:
 
 	void		set(const int & fd) override;
 
-	UTTTBoard & getPos(void);
+	arena::t_pos & getPos(void);
+	const	arena::t_pos & getPos(void) const;
 	
-	void		setPos(UTTTBoard & pos);
+	void		setPos(arena::t_pos & pos);
 
 private:
-	UTTTBoard::t_pos	_pos;
+	arena::t_pos	_pos;
 };
 
 }
