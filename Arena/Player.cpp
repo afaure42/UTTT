@@ -9,8 +9,8 @@ const char * Player::playerNotLaunchedException::what() const throw()
 }
 
 Player::Player(std::string path_to_exec)
-:_path(path_to_exec), _pid(-1), _in_fd(-1),
-	_out_fd(-1), _pipe_in{-1, -1}, _pipe_out{-1, -1}
+: _out_fd(-1), _in_fd(-1), _path(path_to_exec),
+	_pid(-1), _pipe_in{-1, -1}, _pipe_out{-1, -1}
 {
 	if (pipe(this->_pipe_in) < 0)
 		throw (arena::syscall_error(errno, "Player::Player: pipe:"));

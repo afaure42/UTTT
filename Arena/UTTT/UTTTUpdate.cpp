@@ -12,6 +12,7 @@ UTTTUpdate::~UTTTUpdate()
 }
 UTTTUpdate::UTTTUpdate(const t_pos & pos,
 		const std::vector<t_pos> & legal_moves)
+:_enemy_pos(pos), _legal_moves(legal_moves)
 {
 }
 

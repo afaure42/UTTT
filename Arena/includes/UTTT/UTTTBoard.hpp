@@ -71,6 +71,7 @@ private:
 	e_result	_grid[9][9];	
 };
 
+
 }
 
 #include "UTTTBoard.templates.hpp"

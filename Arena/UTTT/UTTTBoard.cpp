@@ -11,7 +11,7 @@ int UTTTBoard::_s_games = 0;
 std::mutex UTTTBoard::_s_vars_mutex;
 
 UTTTBoard::UTTTBoard()
-:IBoard(), _finished(), _result(), _last_move()
+:IBoard(), _result(), _finished(), _last_move()
 {
 	memset(this->_finished_grids, '\0', sizeof(UTTTBoard::e_result) * 9);
 	memset(this->_grid, '\0', sizeof(UTTTBoard::e_result) * 81);

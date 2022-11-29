@@ -2,7 +2,12 @@
 #define UTTTACTION_HPP
 
 
-#include "UTTT.hpp"
+#include "t_pos.hpp"
+#include "IAction.hpp"
+#include "customExceptions.hpp"
+#include <unistd.h>
+
+// #include "UTTT.hpp"
 
 namespace arena
 {

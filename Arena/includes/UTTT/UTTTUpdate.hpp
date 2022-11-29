@@ -1,8 +1,10 @@
 #ifndef UTTTUPDATE_HPP
 # define UTTTUPDATE_HPP
 
-# include "UTTT.hpp"
 # include <vector>
+# include <string>
+# include "IUpdate.hpp"
+# include "t_pos.hpp"
 
 
 namespace arena
