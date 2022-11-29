@@ -35,6 +35,8 @@ public:
 private:
 	static int _s_player1_wins;
 	static int _s_player2_wins;
+	static int _s_player1_first;
+	static int _s_player2_first;
 	static int _s_draws;
 	static int _s_games;
 	static std::mutex _s_vars_mutex;

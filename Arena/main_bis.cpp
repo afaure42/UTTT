@@ -7,16 +7,18 @@ int number_of_games = 0;
 
 void do_game(const std::vector<std::string> * players, const IBoard * board_factory, std::mutex * vars_mutex)
 {
+	if (!board_factory)
+		return;
 	while (true)
 	{
 		IBoard * current = board_factory->clone();
 		vars_mutex->lock();
-		if (current->getGamesPlayed() >= number_of_games)
+		if (number_of_games <= 0)
 		{
 			vars_mutex->unlock();
 			break;
 		}
-		current->getGamesPlayed()++;
+		number_of_games--;
 		vars_mutex->unlock();
 
 		current->resolveGame(*players);
@@ -39,6 +41,8 @@ int main(int argc, char *argv[])
 
 	srand(time(NULL));
 
+	board_factory = new UTTTBoard();
+	board_factory->clearTotalResults();
 
 	//init of variables from arguments
 	int number_of_threads = 1;

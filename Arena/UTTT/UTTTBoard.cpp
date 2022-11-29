@@ -4,15 +4,21 @@ using namespace arena;
 
 int UTTTBoard::_s_player1_wins = 0;
 int UTTTBoard::_s_player2_wins = 0;
+int UTTTBoard::_s_player1_first = 0;
+int UTTTBoard::_s_player2_first = 0;
 int UTTTBoard::_s_draws = 0;
 int UTTTBoard::_s_games = 0;
 std::mutex UTTTBoard::_s_vars_mutex;
 
 UTTTBoard::UTTTBoard()
-:_finished(), _result(), _last_move()
+:IBoard(), _finished(), _result(), _last_move()
 {
 	memset(this->_finished_grids, '\0', sizeof(UTTTBoard::e_result) * 9);
 	memset(this->_grid, '\0', sizeof(UTTTBoard::e_result) * 81);
+}
+
+UTTTBoard::~UTTTBoard()
+{
 }
 
 IBoard *		UTTTBoard::clone(void) const {
@@ -22,8 +28,8 @@ IBoard *		UTTTBoard::clone(void) const {
 std::ostream	& UTTTBoard::printTotalResults(std::ostream & os) const
 {
 	this->_s_vars_mutex.lock();
-	os << "Player 1 Wins:" << this->_s_player1_wins //<< "; Player 1 starts:" << this->_s_player1_first << '\n'
-		<< "\nPlayer 2 Wins:" << this->_s_player2_wins //<< "; Player 2 starts:" << this->_s_player2_first << '\n'
+	os << "Player 1 Wins:" << this->_s_player1_wins << "; Player 1 starts:" << this->_s_player1_first << '\n'
+		<< "\nPlayer 2 Wins:" << this->_s_player2_wins << "; Player 2 starts:" << this->_s_player2_first << '\n'
 		<< "\nDraws:" << this->_s_draws << std::endl
 		<< "Games:" << this->_s_games << std::endl;
 	this->_s_vars_mutex.unlock();
@@ -35,6 +41,8 @@ void			UTTTBoard::clearTotalResults(void)
 	this->_s_vars_mutex.lock();
 	this->_s_player1_wins = 0;
 	this->_s_player2_wins = 0;
+	this->_s_player1_first = 0;
+	this->_s_player2_first = 0;
 	this->_s_draws = 0;
 	this->_s_vars_mutex.unlock();
 }
@@ -47,9 +55,32 @@ void			UTTTBoard::resolveGame(const std::vector<std::string> & players)
 	UTTTAction current(t_pos(-1, -1));
 	UTTTUpdate update;
 
-	Player player1(players[0]);
-	Player player2(players[1]);
+	int swap;
+	const std::string * s1_ptr;
+	const std::string * s2_ptr;
 
+	this->_s_vars_mutex.lock();
+	swap = this->_s_games & 1;
+	++this->_s_games;
+	if (swap)
+		++this->_s_player1_first;
+	else
+		++this->_s_player2_first;
+	this->_s_vars_mutex.unlock();
+
+	if (swap)
+	{
+		s1_ptr = &players[1];
+		s2_ptr = &players[0];
+	}
+	else
+	{
+		s1_ptr = &players[0];
+		s2_ptr = &players[1];
+	}
+
+	Player player1(*s1_ptr);
+	Player player2(*s2_ptr);
 	player1.launchPlayer();
 	player2.launchPlayer();
 
@@ -79,6 +110,13 @@ void			UTTTBoard::resolveGame(const std::vector<std::string> & players)
 		player1.sendUpdate(update);
 	}
 
+	if (swap)
+	{
+		if (this->_result == PLAYER1)
+			this->_result = PLAYER2;
+		else if (this->_result == PLAYER2)
+			this->_result = PLAYER1;
+	}
 	this->_updateResult();
 	// this->_s_vars_mutex.lock();
 	//update the static values
@@ -98,7 +136,7 @@ int	&			UTTTBoard::getGamesPlayed(void) {
 void			UTTTBoard::_updateResult(void)
 {
 	this->_s_vars_mutex.lock();
-	this->_s_games++;
+	
 	if (this->_result == PLAYER1)
 		this->_s_player1_wins++;
 	else if (this->_result == PLAYER2)

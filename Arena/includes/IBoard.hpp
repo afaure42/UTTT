@@ -97,9 +97,6 @@ namespace arena
 	};
 }
 
-std::ostream & operator<<(std::ostream & os, const arena::IBoard & board)
-{
-	return board.write(os);
-}
+std::ostream & operator<<(std::ostream & os, const arena::IBoard & board);
 
 #endif
