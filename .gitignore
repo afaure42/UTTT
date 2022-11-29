@@ -1,2 +1,4 @@
 Carreleau*
 *.dot
+*.d
+*.o
