@@ -10,13 +10,13 @@ typedef uint_fast64_t 	bigboard_type;
 class Node
 {
 public:
-    Node();
+	Node();
 	Node(	const bigboard_type & bigboard,
 			const smallboard_type (&smallboards)[9]);
 	Node(	const bigboard_type & bigboard, const smallboard_type (&smallboards)[9],
 			const smallboard_type & action, Node * parent);
-    Node(const Node & ref);
-    Node & operator=(const Node & ref);
+	Node(const Node & ref);
+	Node & operator=(const Node & ref);
 	~Node();
 
 	// void	apply_action(const smallboard_type & action);
@@ -29,18 +29,18 @@ public:
 	smallboard_type select_move();
 	int	getId(void) const;
 
-    bigboard_type bigboard;
+	bigboard_type bigboard;
 	smallboard_type smallboards[9];
-    smallboard_type action;
+	smallboard_type action;
 
-    Node * parent;
-    std::vector<Node *> children;
-    smallboard_type possible_moves[81];
+	Node * parent;
+	std::vector<Node *> children;
+	smallboard_type possible_moves[81];
 	int possible_moves_size;
-    bool terminal;
-    float value;
+	bool terminal;
+	float value;
 	// int wins;
-    int visits;
+	int visits;
 	int id;
 private:
 };

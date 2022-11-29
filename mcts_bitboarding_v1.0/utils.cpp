@@ -34,16 +34,16 @@ std::string get_y_x(const smallboard_type & action) {
 
 void print_bigboard(bigboard_type & bigboard)
 {
-    std::string bits = std::bitset<64>(bigboard).to_string();
+	std::string bits = std::bitset<64>(bigboard).to_string();
 
-    std::cerr << "LAST PLAY["
-    << bits.substr(0, 4) << ' ' << bits.substr(4, 4) << ' ' << bits.substr(8, 4) << ' ' << bits.substr(12, 4)
-    << "]\n" << "DRAW:["
-    << bits.substr(16, 4) << ' ' << bits.substr(20, 4) << ' ' << bits.substr(24, 4) << ' ' << bits.substr(28, 4)
-    << "]\nPLA1:["
-    << bits.substr(32, 4) << ' ' << bits.substr(36, 4) << ' ' << bits.substr(40, 4) << ' ' << bits.substr(44, 4)
-    << "]\nPLA2:["
-    << bits.substr(48, 4) << ' ' << bits.substr(52, 4) << ' ' << bits.substr(56, 4) << ' ' << bits.substr(60, 4)
+	std::cerr << "LAST PLAY["
+	<< bits.substr(0, 4) << ' ' << bits.substr(4, 4) << ' ' << bits.substr(8, 4) << ' ' << bits.substr(12, 4)
+	<< "]\n" << "DRAW:["
+	<< bits.substr(16, 4) << ' ' << bits.substr(20, 4) << ' ' << bits.substr(24, 4) << ' ' << bits.substr(28, 4)
+	<< "]\nPLA1:["
+	<< bits.substr(32, 4) << ' ' << bits.substr(36, 4) << ' ' << bits.substr(40, 4) << ' ' << bits.substr(44, 4)
+	<< "]\nPLA2:["
+	<< bits.substr(48, 4) << ' ' << bits.substr(52, 4) << ' ' << bits.substr(56, 4) << ' ' << bits.substr(60, 4)
 	<< "]\n";
 }
 
@@ -52,26 +52,26 @@ void print_nice_bigboard(const smallboard_type *boards, const bigboard_type bigb
 	// if (debug) {
 		// print_nice_action(boards[7]);
 	// }
-    for(int i = 0; i < 9; i++)
-    {
-       
-        for (int j = 0; j < 9; j++)
-        {
+	for(int i = 0; i < 9; i++)
+	{
+	   
+		for (int j = 0; j < 9; j++)
+		{
 			smallboard_type pos = from_xy(j, i);
 
-            if ( boards[to_index[(pos >> 16) & POSITION_MASK]] & (pos & POSITION_MASK))
-                std::cerr << 'x';
-            else if ( boards[to_index[(pos >> 16) & POSITION_MASK]] & ((pos & POSITION_MASK) << 16))
-                std::cerr << 'o';
-            else
-                std::cerr << '-';
+			if ( boards[to_index[(pos >> 16) & POSITION_MASK]] & (pos & POSITION_MASK))
+				std::cerr << 'x';
+			else if ( boards[to_index[(pos >> 16) & POSITION_MASK]] & ((pos & POSITION_MASK) << 16))
+				std::cerr << 'o';
+			else
+				std::cerr << '-';
 			if (j == 2 || j == 5)
 				std::cerr << '|';
-        }
-        std::cerr << '\n';
+		}
+		std::cerr << '\n';
 		if (i == 2 || i == 5)
 			std::cerr << '\n';
-    }
+	}
 }
 
 void print_nice_action(const smallboard_type & action)
