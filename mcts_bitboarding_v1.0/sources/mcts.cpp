@@ -155,11 +155,11 @@ Node * mcts(Node * root, int max_time, clock_t start_time)
 	#endif
 	{
 		mcts_iteration(root);
-		i++;
+		// i++;
 	}
 
 	// std::cerr << "rollouts this turn: " << i << '\n';
-	total_rollouts += i;
-	turns++;
+	// total_rollouts += i;
+	// turns++;
 	return root->get_best_move();
 }

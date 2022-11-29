@@ -39,6 +39,10 @@ bool debug = false;
 unsigned long node_counter = 0;
 int total_rollouts = 0;
 int	turns = 0;
+unsigned nodes_index = 0;
+Node * nodes = NULL;
+std::allocator<Node> alloc = std::allocator<Node>();
+
 const uint_fast32_t wins[]
 {
 	0b0000000000000111,
@@ -182,7 +186,7 @@ float get_board_score(bigboard_type & bigboard)
 	return (DRAW_SCORE);
 }
 
-smallboard_type create_action(
+smallboard_type inline create_action(
 	const pos_type & bigboard_pos, 
 	const pos_type & smallboard_pos,
 	const bool & player)
@@ -289,20 +293,23 @@ void sigint_handler(int sig)
 
 int main(int argc, char **argv)
 {
-	try
-	{
+	bool first = true;
 	name = argv[0];
 	std::signal(SIGINT, sigint_handler);
 	to_index_init();
 	srand(time(NULL));
-	std::ofstream tree_file;
+
 	smallboard_type smallboards[9];
 	bigboard_type bigboard = 0;
 	// node_vector.reserve(100000);
 	memset(smallboards, 0, sizeof(smallboard_type[9]));
 	// node_vector.push_back(Node(bigboard, smallboards));
 	// Node * root = &node_vector.back();
-	Node * root = new Node(bigboard, smallboards);
+	nodes = alloc.allocate(200000);
+
+	// Node * root = alloc.construct(nodes + nodes_index++, bigboard, smallboards);
+	std::allocator_traits<std::allocator<Node>>::construct(alloc, (nodes + nodes_index), bigboard, smallboards);
+	Node * root = nodes + nodes_index++;
 	Node * permanent_root = root;
 	// std::cerr << '\n';
 	int opponent_row;
@@ -326,13 +333,13 @@ int main(int argc, char **argv)
 			// std::cerr << "Enemy Action:\n";
 			// print_nice_action(action);
 			current = root->select_enemy_move(action);
-			delete root;
+			// delete root;
 			root = current;
 		}
 		else
 		{
 			current->bigboard &= ~LAST_PLAYER_MASK;
-			#ifdef CENTER_STRAT
+			#ifndef NO_CENTER_STRAT
 			current->possible_moves[0] = from_xy(4, 4);
 			current->possible_moves[0] |= TO_MOVE_MASK;
 			current->possible_moves_size = 1;
@@ -356,7 +363,13 @@ int main(int argc, char **argv)
 
 		// std::cerr << "Before MCTS\n";
 		// print_bigboard(current->bigboard);
-		current = mcts(current, 60, now);
+		if (first)
+		{
+			first = false;
+			current = mcts(current, 985, now);
+		}
+		else
+			current = mcts(current, 85, now);
 		// for(int i = 0; i < current->children.size(); i++)
 			// std::cerr << "[" << get_y_x(current->children[i]->action) << "]";
 		// std::cerr << '\n';
@@ -364,7 +377,8 @@ int main(int argc, char **argv)
 		// dump_tree(tree_file, *permanent_root);
 		// std::cerr << "Terminal nodes :" << terminal_nodes << '\n';
 		// std:cerr << "Number of childs in best move node:" << current->children.size() << 
-		// " score:" << current->wins << ", visits:" << current->visits << '\n';
+		// " score:" << current->value << ", visits:" << current->visits << '\n' <<
+		// " nodes_index:" << nodes_index << '\n';
 		// print_nice_bigboard(current->smallboards, current->bigboard);
 		// std::cerr << "LET ME GUESS" << std::endl;
 		current->parent = NULL;
@@ -376,11 +390,5 @@ int main(int argc, char **argv)
 		// cerr << "sending:" << get_y_x(current->action) << endl;
 		cout << get_y_x(current->action) << endl;
 		// std::cerr << "AVG ROLLOUTS:" << total_rollouts / turns << std::endl;
-	}
-	}
-	catch (std::exception & e)
-	{
-		std::cerr << "EXCEPTION OCCURED: " << e.what() << std::endl;
-		// std::cerr << "EXCEPTION OCCURED: " << std::endl;
 	}
 }

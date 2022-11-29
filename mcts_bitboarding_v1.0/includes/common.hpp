@@ -17,6 +17,7 @@
 #include <cstdlib>
 #include <cstdio>
 #include "Node.hpp"
+#include <memory> //std::allocator
 
 class Node;
 typedef	uint_fast16_t	pos_type;
@@ -30,6 +31,12 @@ extern unsigned long node_counter;
 extern bool debug;
 extern int	turns;
 extern int	total_rollouts;
+extern Node * nodes;
+extern unsigned nodes_index;
+extern std::allocator<Node> alloc;
+
+
+#define NODES_SIZE 200000
 
 //BINARY DEFINES
 //    0 1 2
@@ -117,7 +124,7 @@ std::string get_y_x(const smallboard_type & action);
 /********************/
 
 #ifndef C
-#define C               0.7f
+#define C               2.0f
 #endif
 
 #ifndef ROLLOUT_PER_TURN

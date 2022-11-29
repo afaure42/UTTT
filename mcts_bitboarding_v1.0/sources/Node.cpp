@@ -1,5 +1,7 @@
 #include "common.hpp"
 
+
+
 Node::Node()
 	: bigboard(0), action(), parent(), possible_moves(),
 	  value(), visits(), terminal(false), possible_moves_size(), id(node_counter++){};
@@ -68,7 +70,13 @@ Node * Node::add_child(const smallboard_type & action)
 {
 	// node_vector.push_back(Node(this->bigboard, this->smallboards, action, this));
 	// Node *child = &node_vector.back();
-	Node * child = new Node(this->bigboard, this->smallboards, action, this);
+	std::allocator_traits<std::allocator<Node>>::construct(alloc, (nodes + nodes_index),
+			this->bigboard, this->smallboards, action, this);
+	Node * child = nodes + nodes_index++;
+	if (nodes_index == NODES_SIZE)
+		nodes_index = 0;
+	// Node * child = alloc.construct(nodes + nodes_index++, this->bigboard, this->smallboards, action, this);
+	// Node * child = std::construct_at(nodes + nodes_index++, this->bigboard, this->smallboards, action, this);
 
 	this->children.push_back(child);
 	return child;
@@ -121,7 +129,14 @@ Node * Node::select_enemy_move(const smallboard_type & action)
 		// std::cerr << "NO CORRESPONDING MOVE FOUND\n";
 		// node_vector.push_back(Node(this->bigboard, this->smallboards, action, NULL));
 		// return &node_vector.back();
-		return new Node(this->bigboard, this->smallboards, action, NULL);
+		std::allocator_traits<std::allocator<Node>>::construct(alloc, (nodes + nodes_index),
+				this->bigboard, this->smallboards, action, (Node *)NULL);
+		ret = nodes + nodes_index++;
+		if (nodes_index == NODES_SIZE)
+			nodes_index = 0;
+		return ret;
+		// return alloc.construct(nodes + nodes_index++, this->bigboard, this->smallboards, action, (Node *)NULL);
+		// return std::construct_at(nodes + nodes_index++, this->bigboard, this->smallboards, action, NULL);
 	}
 	else
 	{
