@@ -92,7 +92,26 @@ float rollout(
 
 void update_path(Node * node)
 {
-	float value = node->value;
+	float value;
+	if (isTerminal(node->bigboard) || node->proven)
+	{
+		if ((node->proven
+				&& ((node->state == Node::e_state::WIN && node->bigboard & LAST_PLAYER_MASK)
+				|| (node->state == Node::e_state::LOSE && !(node->bigboard & LAST_PLAYER_MASK))))
+			||isWin(node->bigboard))
+			value = 1;
+		else if ((node->proven
+				&& ((node->state == Node::e_state::LOSE && node->bigboard & LAST_PLAYER_MASK)
+				|| (node->state == Node::e_state::WIN && !(node->bigboard & LAST_PLAYER_MASK))))
+			||isLost(node->bigboard))
+			value = 0;
+		else
+			value = 0.5;
+		
+		node->value += value;
+	}
+	else
+		value = node->value;
 	node = node->parent;
 
 	while(node != NULL)
@@ -110,7 +129,7 @@ void mcts_iteration(Node * node)
 	if (node == NULL)
 		std::cerr << "Brace for impact\n";
 	// std::cerr << "Selecting" << std::endl;
-	while(node->possible_moves_size == 0 && !isTerminal(node->bigboard))
+	while(node->possible_moves_size == 0 && !isTerminal(node->bigboard) && !node->proven)
 		node = select_child(*node);
 
 	// if (isTerminal(node->bigboard))
@@ -120,7 +139,7 @@ void mcts_iteration(Node * node)
 	// }
 
 	// std::cerr << "Selection finished" << std::endl;
-	if (!isTerminal(node->bigboard))
+	if (!isTerminal(node->bigboard) && !node->proven)
 	{
 		// std::cerr << "expanding" << std::endl;
 		smallboard_type action = node->select_move();
@@ -128,13 +147,13 @@ void mcts_iteration(Node * node)
 		node = node->add_child(action);
 	}
 
-	if(!isTerminal(node->bigboard))
+	if(!isTerminal(node->bigboard) && !node->proven)
 	{
 		// std::cerr << "Starting Rollout" << std::endl;
 		node->value = rollout(node->bigboard, node->smallboards, node->possible_moves, node->possible_moves_size);
-		node->visits = 1; 
 	}
 
+	node->visits++;
 	update_path(node);
 }
 

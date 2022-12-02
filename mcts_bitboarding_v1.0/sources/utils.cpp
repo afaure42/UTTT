@@ -94,23 +94,23 @@ void dump_node(Node & node, std::ofstream & myfile, int deep)
 		return;
 	myfile << '\t' << node.getId() << "[label=\"[" << get_y_x(node.action) << "]\n"
 	<<"P=" << ((node.bigboard & LAST_PLAYER_MASK) ? "o" : "x") 
-	<< "W=" << node.value << ";V=" << node.visits<< '\"';
-	if (isTerminal(node.bigboard))
+	<< "W=" << node.value << ";V=" << node.visits << (node.proven ? " PROVEN" : "") << '\"';
+	if (isTerminal(node.bigboard) || node.proven)
 	{
 		myfile << " color=\"";
-		if (isWin(node.bigboard))
+		if (isWin(node.bigboard) || (node.proven && node.state == Node::e_state::WIN))
 			myfile << "green";
-		else if (isLost(node.bigboard))
+		else if (isLost(node.bigboard) || (node.proven && node.state == Node::e_state::LOSE))
 			myfile << "red";
 		else
 			myfile << "blue";
 		myfile << '\"';
 	}
 	myfile <<"]\n";
-	for(int i = 0; i < node.children.size(); i++) {
+	for(size_t i = 0; i < node.children.size(); i++) {
 		myfile << '\t' << node.getId() << " -> " << node.children[i]->getId() << std::endl;
 	}
-	for (int i = 0; i < node.children.size(); i++) {
+	for (size_t i = 0; i < node.children.size(); i++) {
 		dump_node(*(node.children[i]), myfile, deep);
 	}
 }
@@ -122,7 +122,7 @@ void dump_tree(std::ofstream & myfile, Node & root)
 	myfile << "strict digraph {\n";
 	myfile << "\tnode [shape=\"rect\"]\n";
 
-	dump_node(root, myfile, 3);
+	dump_node(root, myfile, 100);
 
 	myfile << "}";
 	myfile.close();

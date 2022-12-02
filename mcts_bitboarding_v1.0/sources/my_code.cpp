@@ -42,6 +42,7 @@ int	turns = 0;
 unsigned nodes_index = 0;
 Node * nodes = NULL;
 std::allocator<Node> alloc = std::allocator<Node>();
+int proven_node_count = 0;
 
 const uint_fast32_t wins[]
 {
@@ -295,6 +296,7 @@ int main(int argc, char **argv)
 {
 	bool first = true;
 	name = argv[0];
+	// std::ofstream tree_file;
 	std::signal(SIGINT, sigint_handler);
 	to_index_init();
 	srand(time(NULL));
@@ -318,8 +320,10 @@ int main(int argc, char **argv)
 	// game loop
 	while (1) 
 	{
+		turns++;
 		clock_t now = clock();
 		current = root;
+		current->parent = NULL;
 		cin >> opponent_row >> opponent_col; cin.ignore();
 		// cerr << argv[0] << ":input received:" << opponent_row << " " << opponent_col << std::endl;
 		if (opponent_row != -1)
@@ -373,12 +377,19 @@ int main(int argc, char **argv)
 		// for(int i = 0; i < current->children.size(); i++)
 			// std::cerr << "[" << get_y_x(current->children[i]->action) << "]";
 		// std::cerr << '\n';
-		
-		// dump_tree(tree_file, *permanent_root);
+		// std::cerr << "Turn:" << turns << std::endl;
+		// std::cerr << "Children size =" << current->children.size() << std::endl;
+		// if (proven_node_count > 10)
+		// {
+			// dump_tree(tree_file, *current);
+			// exit(EXIT_FAILURE);
+		// }
 		// std::cerr << "Terminal nodes :" << terminal_nodes << '\n';
-		// std:cerr << "Number of childs in best move node:" << current->children.size() << 
+		// std::cerr << "Number of childs in best move node:" << current->children.size() << 
 		// " score:" << current->value << ", visits:" << current->visits << '\n' <<
 		// " nodes_index:" << nodes_index << '\n';
+		if (current->proven)
+			std::cerr << "Current node is proven\n";
 		// print_nice_bigboard(current->smallboards, current->bigboard);
 		// std::cerr << "LET ME GUESS" << std::endl;
 		current->parent = NULL;

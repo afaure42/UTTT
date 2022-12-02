@@ -4,11 +4,12 @@
 
 Node::Node()
 	: bigboard(0), action(), parent(), possible_moves(),
-	  value(), visits(), terminal(false), possible_moves_size(), id(node_counter++){};
+	  possible_moves_size(), terminal(false), value(), visits(), id(node_counter++),
+	  proven(false){};
 
 Node::Node(const bigboard_type &bigboard, const smallboard_type (&smallboards)[9])
-	: bigboard(bigboard), parent(), action(), value(), visits(), terminal(false),
-	  possible_moves_size(), id(node_counter++)
+	: bigboard(bigboard), action(), parent(), possible_moves_size(),
+	terminal(false), value(), visits(), id(node_counter++), proven(false)
 {
 	memcpy(this->smallboards, smallboards, sizeof(smallboard_type[9]));
 	// debug = true;
@@ -18,8 +19,8 @@ Node::Node(const bigboard_type &bigboard, const smallboard_type (&smallboards)[9
 
 Node::Node(const bigboard_type &bigboard, const smallboard_type (&smallboards)[9],
 		   const smallboard_type &action, Node *parent)
-	: bigboard(bigboard), action(action), parent(parent), value(), visits(), terminal(false),
-	  possible_moves_size(), id(node_counter++)
+	: bigboard(bigboard), action(action), parent(parent), possible_moves_size(),
+	terminal(false), value(), visits(), id(node_counter++), proven(false)
 {
 	memcpy(this->smallboards, smallboards, sizeof(smallboard_type[9]));
 	apply_action(this->bigboard, this->smallboards, this->action);
@@ -30,9 +31,19 @@ Node::Node(const bigboard_type &bigboard, const smallboard_type (&smallboards)[9
 	if (isTerminal(this->bigboard))
 	{
 		this->value = isWin(this->bigboard) ? 1 : (isLost(this->bigboard) ? 0 : 0.5);
+		proven_node_count++;
+		this->proven = true;
+		if (isWin(this->bigboard) || isLost(this->bigboard))
+			this->state = Node::e_state::WIN;
+		// else if (isLost(this->bigboard))
+			// this->state = Node::e_state::LOSE;
+		else
+			this->state = Node::e_state::DRAW;
+
 		// this->value = isWin(this->bigboard) ? 1 : 0;
 		this->terminal = true;
 		this->visits = 1;
+		this->propagateProvenState();
 	}
 	else
 		this->possible_moves_size = list_actions(this->possible_moves, this->bigboard, this->smallboards);
@@ -62,7 +73,7 @@ Node & Node::operator=(const Node &ref)
 
 Node::~Node()
 {
-	for (int i = 0; i < this->children.size(); ++i)
+	for (std::size_t i = 0; i < this->children.size(); ++i)
 		delete (this->children[i]);
 }
 
@@ -110,7 +121,7 @@ Node * Node::select_enemy_move(const smallboard_type & action)
 		print_nice_action(action);
 		std::cerr << "children size:" << this->children.size() << '\n';
 	}
-	for(int i = 0; i < this->children.size(); i++)
+	for(std::size_t i = 0; i < this->children.size(); i++)
 	{
 		// std::cerr << "TESTING:\n";
 		// print_nice_action(this->children[i]->action);
@@ -156,13 +167,16 @@ Node * Node::get_best_move()
 		// print_nice_bigboard(this->smallboards, this->bigboard);
 	// int terminals = 0;
 	// std::cerr << children.size() << std::endl;
-	for (int i = 0; i < children.size(); i++)
+	for (std::size_t i = 0; i < children.size(); i++)
 	{
 		//checking for immediate win
-		if (isTerminal(this->children[i]->bigboard) && isWin(this->children[i]->bigboard))
+		if ((isTerminal(this->children[i]->bigboard) && isWin(this->children[i]->bigboard))
+			|| (this->children[i]->proven && this->children[i]->state == Node::e_state::WIN))
 		{
 			// if(debug)
 				// std::cerr << "returning instant win\n";
+			if (this->proven)
+				std::cerr << "Returning proven win\n";
 			return this->children[i];
 		}
 
@@ -182,6 +196,8 @@ Node * Node::get_best_move()
 
 smallboard_type Node::select_move()
 {
+	if (this->possible_moves_size == 0)
+		std::cerr << "FPE INCOMING BE CAREFULL" << std::endl;
 	int move = rand() % this->possible_moves_size;
 	smallboard_type ret = this->possible_moves[move];
 	// std::cerr << "BEFORE:\n";
@@ -200,4 +216,58 @@ smallboard_type Node::select_move()
 
 int Node::getId(void) const {
 	return this->id;
+}
+
+
+void Node::propagateProvenState(void)
+{
+	if (!this->parent) return;
+	if (!this->proven) return;
+
+	if (this->state == WIN)
+	{
+		this->parent->proven = true;
+		proven_node_count++;
+		this->parent->state = LOSE;
+		this->parent->propagateProvenState();
+		return;
+	}
+
+	//checking siblings
+	//if not all siblings have been made we cant check further
+	if (this->parent->possible_moves_size != 0)
+		return ;
+
+
+	bool all_siblings_proven = true;
+	bool all_siblings_lose = true;
+	for(std::size_t i = 0; i < this->parent->children.size(); i++)
+	{
+		if (this->parent->children[i]->proven == false)
+		{
+			all_siblings_lose = false;
+			all_siblings_proven = false;
+			break;
+		}
+		if (this->parent->children[i]->state == Node::e_state::WIN
+			|| this->parent->children[i]->state == Node::e_state::DRAW)
+			all_siblings_lose = false;
+	}
+
+	if (this->state == Node::e_state::DRAW && all_siblings_proven)
+	{
+		this->parent->proven = true;
+		proven_node_count++;
+		this->parent->state = Node::e_state::DRAW;
+		this->parent->propagateProvenState();
+	}
+
+	else if (all_siblings_lose) //current node == DRAW is implicit
+	{
+		this->parent->proven = true;
+		proven_node_count++;
+		this->parent->state = Node::e_state::WIN;
+		this->parent->propagateProvenState();
+	}
+
 }

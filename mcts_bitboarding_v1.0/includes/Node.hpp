@@ -26,6 +26,7 @@ public:
 	Node * remove_child(const Node * & ref);
 	Node * select_enemy_move(const smallboard_type & action);
 	Node * get_best_move();
+	void propagateProvenState(void);
 	smallboard_type select_move();
 	int	getId(void) const;
 
@@ -42,6 +43,16 @@ public:
 	// int wins;
 	int visits;
 	int id;
+
+	enum e_state
+	{
+		WIN,
+		LOSE,
+		DRAW
+	};
+
+	bool proven;
+	e_state state;
 private:
 };
 

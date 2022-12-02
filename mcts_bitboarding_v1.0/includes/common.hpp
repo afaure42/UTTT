@@ -34,6 +34,7 @@ extern int	total_rollouts;
 extern Node * nodes;
 extern unsigned nodes_index;
 extern std::allocator<Node> alloc;
+extern int	proven_node_count;
 
 
 #define NODES_SIZE 200000
