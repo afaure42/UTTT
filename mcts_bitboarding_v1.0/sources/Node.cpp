@@ -222,6 +222,7 @@ int Node::getId(void) const {
 void Node::propagateProvenState(void)
 {
 	if (!this->parent) return;
+	if (this->parent->proven) return;
 	if (!this->proven) return;
 
 	if (this->state == WIN)
@@ -254,19 +255,21 @@ void Node::propagateProvenState(void)
 			all_siblings_lose = false;
 	}
 
-	if (this->state == Node::e_state::DRAW && all_siblings_proven)
+	if (all_siblings_proven && !all_siblings_lose)
 	{
 		this->parent->proven = true;
 		proven_node_count++;
 		this->parent->state = Node::e_state::DRAW;
+		std::cerr << "UPPING DRAW NODE" << this->parent->getId() << " FOR PLAYER" << (this->parent->bigboard & LAST_PLAYER_MASK ? 1 : 2) << "\n";
 		this->parent->propagateProvenState();
 	}
 
-	else if (all_siblings_lose) //current node == DRAW is implicit
+	else if (all_siblings_proven && all_siblings_lose) 
 	{
 		this->parent->proven = true;
 		proven_node_count++;
 		this->parent->state = Node::e_state::WIN;
+		std::cerr << "UPPING WIN NODE" << this->parent->getId() << " FOR PLAYER" << (this->parent->bigboard & LAST_PLAYER_MASK ? 1 : 2) << "\n";
 		this->parent->propagateProvenState();
 	}
 

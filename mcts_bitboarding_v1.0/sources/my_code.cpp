@@ -294,6 +294,7 @@ void sigint_handler(int sig)
 
 int main(int argc, char **argv)
 {
+	fclose(stderr);
 	bool first = true;
 	name = argv[0];
 	// std::ofstream tree_file;
@@ -389,7 +390,15 @@ int main(int argc, char **argv)
 		// " score:" << current->value << ", visits:" << current->visits << '\n' <<
 		// " nodes_index:" << nodes_index << '\n';
 		if (current->proven)
+		{
 			std::cerr << "Current node is proven\n";
+			if (current->state == Node::e_state::WIN)
+				std::cerr << "WIN\n";
+			else if (current->state == Node::e_state::LOSE)
+				std::cerr << "LOSE\n";
+			else
+				std::cerr << "DRAW\n";
+		}
 		// print_nice_bigboard(current->smallboards, current->bigboard);
 		// std::cerr << "LET ME GUESS" << std::endl;
 		current->parent = NULL;

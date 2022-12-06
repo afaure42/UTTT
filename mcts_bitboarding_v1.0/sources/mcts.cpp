@@ -7,7 +7,7 @@ float ucb1(const Node &node)
 {
 	if (node.visits == 0)
 		return 0;
-	return (node.value / (float)node.visits + C * sqrt(log(node.parent->visits) / node.visits));
+	return (node.value / (float)node.visits + (turns < 20 ? 25 : C) * sqrt(log(node.parent->visits) / node.visits));
 }
 
 Node * select_child(Node & node)
