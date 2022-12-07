@@ -294,7 +294,7 @@ void sigint_handler(int sig)
 
 int main(int argc, char **argv)
 {
-	fclose(stderr);
+	// fclose(stderr);
 	bool first = true;
 	name = argv[0];
 	// std::ofstream tree_file;

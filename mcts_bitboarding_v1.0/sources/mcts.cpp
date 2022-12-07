@@ -7,7 +7,7 @@ float ucb1(const Node &node)
 {
 	if (node.visits == 0)
 		return 0;
-	return (node.value / (float)node.visits + (turns < 20 ? 25 : C) * sqrt(log(node.parent->visits) / node.visits));
+	return (node.value / (float)node.visits + C * sqrt(log(node.parent->visits) / node.visits));
 }
 
 Node * select_child(Node & node)
@@ -15,6 +15,74 @@ Node * select_child(Node & node)
 	Node * best_node = NULL;
 	float best_value;
 
+	for(node_iter iter = node.children.begin(); iter != node.children.end(); iter++)
+	{
+		float current_value = ucb1(**iter);
+
+		if (best_node == NULL)
+		{
+			best_node = *iter;
+			best_value = current_value;
+			continue;
+		}
+
+		if (current_value > best_value)
+		{
+			best_node = *iter;
+			best_value = current_value;
+		}
+
+	}
+	return best_node;
+}
+
+// WIN NODE == 2
+// LOSE NODE == 0
+// DRAW NODE == 1
+Node * minimax(Node & node, bool maximise, int depth)
+{
+	Node * max = NULL;
+	Node * min = NULL;
+
+	if (!depth--) return NULL;
+	if (isTerminal(node.bigboard))
+	{
+		if (isWin(node.bigboard) || isLost(node.bigboard))
+			return &node;
+	}
+
+	for(int i = 0;i < node.children.size(); i++)
+	{
+		Node * current = minimax(*(node.children[i]), !maximise, depth);
+		if (!current) continue;
+
+		if (isWin(current->bigboard))
+			max = node.children[i];
+		else if(isLost(current->bigboard))
+			min = node.children[i];
+		
+	}
+
+	if (maximise)
+		return max;
+	else
+		return min;
+}
+
+Node * hybrid_select_child(Node & node)
+{
+	Node * best_node = NULL;
+	float best_value;
+
+	if (node.visits == 2)
+	{
+		best_node = minimax(node, node.bigboard & LAST_PLAYER_MASK, 5);
+		if (best_node)
+		{
+			std::cerr << "MINIMAX RETURNED\n";
+			return best_node;
+		}
+	}
 	for(node_iter iter = node.children.begin(); iter != node.children.end(); iter++)
 	{
 		float current_value = ucb1(**iter);
@@ -130,7 +198,7 @@ void mcts_iteration(Node * node)
 		std::cerr << "Brace for impact\n";
 	// std::cerr << "Selecting" << std::endl;
 	while(node->possible_moves_size == 0 && !isTerminal(node->bigboard) && !node->proven)
-		node = select_child(*node);
+		node = hybrid_select_child(*node);
 
 	// if (isTerminal(node->bigboard))
 	// {
@@ -174,10 +242,10 @@ Node * mcts(Node * root, int max_time, clock_t start_time)
 	#endif
 	{
 		mcts_iteration(root);
-		// i++;
+		i++;
 	}
 
-	// std::cerr << "rollouts this turn: " << i << '\n';
+	std::cerr << "rollouts this turn: " << i << '\n';
 	// total_rollouts += i;
 	// turns++;
 	return root->get_best_move();

@@ -31,19 +31,19 @@ Node::Node(const bigboard_type &bigboard, const smallboard_type (&smallboards)[9
 	if (isTerminal(this->bigboard))
 	{
 		this->value = isWin(this->bigboard) ? 1 : (isLost(this->bigboard) ? 0 : 0.5);
-		proven_node_count++;
-		this->proven = true;
-		if (isWin(this->bigboard) || isLost(this->bigboard))
-			this->state = Node::e_state::WIN;
+		// proven_node_count++;
+		// this->proven = true;
+		// if (isWin(this->bigboard) || isLost(this->bigboard))
+			// this->state = Node::e_state::WIN;
 		// else if (isLost(this->bigboard))
 			// this->state = Node::e_state::LOSE;
-		else
-			this->state = Node::e_state::DRAW;
+		// else
+			// this->state = Node::e_state::DRAW;
 
 		// this->value = isWin(this->bigboard) ? 1 : 0;
 		this->terminal = true;
 		this->visits = 1;
-		this->propagateProvenState();
+		// this->propagateProvenState();
 	}
 	else
 		this->possible_moves_size = list_actions(this->possible_moves, this->bigboard, this->smallboards);
@@ -219,58 +219,58 @@ int Node::getId(void) const {
 }
 
 
-void Node::propagateProvenState(void)
-{
-	if (!this->parent) return;
-	if (this->parent->proven) return;
-	if (!this->proven) return;
+// void Node::propagateProvenState(void)
+// {
+// 	if (!this->parent) return;
+// 	if (this->parent->proven) return;
+// 	if (!this->proven) return;
 
-	if (this->state == WIN)
-	{
-		this->parent->proven = true;
-		proven_node_count++;
-		this->parent->state = LOSE;
-		this->parent->propagateProvenState();
-		return;
-	}
+// 	if (this->state == WIN)
+// 	{
+// 		this->parent->proven = true;
+// 		proven_node_count++;
+// 		this->parent->state = LOSE;
+// 		this->parent->propagateProvenState();
+// 		return;
+// 	}
 
-	//checking siblings
-	//if not all siblings have been made we cant check further
-	if (this->parent->possible_moves_size != 0)
-		return ;
+// 	//checking siblings
+// 	//if not all siblings have been made we cant check further
+// 	if (this->parent->possible_moves_size != 0)
+// 		return ;
 
 
-	bool all_siblings_proven = true;
-	bool all_siblings_lose = true;
-	for(std::size_t i = 0; i < this->parent->children.size(); i++)
-	{
-		if (this->parent->children[i]->proven == false)
-		{
-			all_siblings_lose = false;
-			all_siblings_proven = false;
-			break;
-		}
-		if (this->parent->children[i]->state == Node::e_state::WIN
-			|| this->parent->children[i]->state == Node::e_state::DRAW)
-			all_siblings_lose = false;
-	}
+// 	bool all_siblings_proven = true;
+// 	bool all_siblings_lose = true;
+// 	for(std::size_t i = 0; i < this->parent->children.size(); i++)
+// 	{
+// 		if (this->parent->children[i]->proven == false)
+// 		{
+// 			all_siblings_lose = false;
+// 			all_siblings_proven = false;
+// 			break;
+// 		}
+// 		if (this->parent->children[i]->state == Node::e_state::WIN
+// 			|| this->parent->children[i]->state == Node::e_state::DRAW)
+// 			all_siblings_lose = false;
+// 	}
 
-	if (all_siblings_proven && !all_siblings_lose)
-	{
-		this->parent->proven = true;
-		proven_node_count++;
-		this->parent->state = Node::e_state::DRAW;
-		std::cerr << "UPPING DRAW NODE" << this->parent->getId() << " FOR PLAYER" << (this->parent->bigboard & LAST_PLAYER_MASK ? 1 : 2) << "\n";
-		this->parent->propagateProvenState();
-	}
+// 	if (all_siblings_proven && !all_siblings_lose)
+// 	{
+// 		this->parent->proven = true;
+// 		proven_node_count++;
+// 		this->parent->state = Node::e_state::DRAW;
+// 		std::cerr << "UPPING DRAW NODE" << this->parent->getId() << " FOR PLAYER" << (this->parent->bigboard & LAST_PLAYER_MASK ? 1 : 2) << "\n";
+// 		this->parent->propagateProvenState();
+// 	}
 
-	else if (all_siblings_proven && all_siblings_lose) 
-	{
-		this->parent->proven = true;
-		proven_node_count++;
-		this->parent->state = Node::e_state::WIN;
-		std::cerr << "UPPING WIN NODE" << this->parent->getId() << " FOR PLAYER" << (this->parent->bigboard & LAST_PLAYER_MASK ? 1 : 2) << "\n";
-		this->parent->propagateProvenState();
-	}
+// 	else if (all_siblings_proven && all_siblings_lose) 
+// 	{
+// 		this->parent->proven = true;
+// 		proven_node_count++;
+// 		this->parent->state = Node::e_state::WIN;
+// 		std::cerr << "UPPING WIN NODE" << this->parent->getId() << " FOR PLAYER" << (this->parent->bigboard & LAST_PLAYER_MASK ? 1 : 2) << "\n";
+// 		this->parent->propagateProvenState();
+// 	}
 
-}
+// }

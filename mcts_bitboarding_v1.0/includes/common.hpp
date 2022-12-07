@@ -125,7 +125,7 @@ std::string get_y_x(const smallboard_type & action);
 /********************/
 
 #ifndef C
-#define C               2.0f
+#define C               20.0f
 #endif
 
 #ifndef ROLLOUT_PER_TURN
@@ -137,6 +137,8 @@ std::string get_y_x(const smallboard_type & action);
 #endif
 
 float ucb1(const Node &node);
+Node * minimax(Node & node, bool maximise, int depth);
+Node * hybrid_select_child(Node & node);
 Node * select_child(Node & node);
 float rollout(
 		bigboard_type bigboard,
