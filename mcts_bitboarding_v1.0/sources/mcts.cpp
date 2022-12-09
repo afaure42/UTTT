@@ -45,9 +45,10 @@ Node * minimax(Node & node, bool maximise, int depth)
 	Node * min = NULL;
 
 	if (!depth--) return NULL;
-	if (isTerminal(node.bigboard))
+	if (isTerminal(node.bigboard) || node.proven)
 	{
-		if (isWin(node.bigboard) || isLost(node.bigboard))
+		if (isWin(node.bigboard) || isLost(node.bigboard)
+			|| node.proven)
 			return &node;
 	}
 
@@ -57,10 +58,9 @@ Node * minimax(Node & node, bool maximise, int depth)
 		if (!current) continue;
 
 		if (isWin(current->bigboard))
-			max = node.children[i];
-		else if(isLost(current->bigboard))
-			min = node.children[i];
-		
+			max = current;
+		if (isLost(current->bigboard))
+			min = current;
 	}
 
 	if (maximise)
@@ -74,12 +74,12 @@ Node * hybrid_select_child(Node & node)
 	Node * best_node = NULL;
 	float best_value;
 
-	if (node.visits == 2)
+	if (node.visits == 5)
 	{
-		best_node = minimax(node, node.bigboard & LAST_PLAYER_MASK, 5);
+		best_node = minimax(node, node.bigboard & LAST_PLAYER_MASK, 2);
 		if (best_node)
 		{
-			std::cerr << "MINIMAX RETURNED\n";
+			// std::cerr << "MINIMAX RETURNED\n";
 			return best_node;
 		}
 	}
@@ -197,8 +197,11 @@ void mcts_iteration(Node * node)
 	if (node == NULL)
 		std::cerr << "Brace for impact\n";
 	// std::cerr << "Selecting" << std::endl;
-	while(node->possible_moves_size == 0 && !isTerminal(node->bigboard) && !node->proven)
-		node = hybrid_select_child(*node);
+	while(node->possible_moves_size == 0 && !isTerminal(node->bigboard))
+	{
+		// node = hybrid_select_child(*node);
+		node = select_child(node);
+	}
 
 	// if (isTerminal(node->bigboard))
 	// {
@@ -207,7 +210,7 @@ void mcts_iteration(Node * node)
 	// }
 
 	// std::cerr << "Selection finished" << std::endl;
-	if (!isTerminal(node->bigboard) && !node->proven)
+	if (!isTerminal(node->bigboard))
 	{
 		// std::cerr << "expanding" << std::endl;
 		smallboard_type action = node->select_move();
@@ -215,7 +218,7 @@ void mcts_iteration(Node * node)
 		node = node->add_child(action);
 	}
 
-	if(!isTerminal(node->bigboard) && !node->proven)
+	if(!isTerminal(node->bigboard))
 	{
 		// std::cerr << "Starting Rollout" << std::endl;
 		node->value = rollout(node->bigboard, node->smallboards, node->possible_moves, node->possible_moves_size);
@@ -235,17 +238,17 @@ Node * mcts(Node * root, int max_time, clock_t start_time)
 	int i = 0;
 
 	// std::cerr << "Starting MCTS iterations\n";
-	#ifdef FIXED_ROLLOUT
-	while (i < ROLLOUT_PER_TURN)
-	#else
+	// #ifdef FIXED_ROLLOUT
+	// while (i < ROLLOUT_PER_TURN)
+	// #else
+	// #endif
 	while (elapsed_time(start_time) < max_time)
-	#endif
 	{
 		mcts_iteration(root);
 		i++;
 	}
 
-	std::cerr << "rollouts this turn: " << i << '\n';
+	// std::cerr << "rollouts this turn: " << i << '\n';
 	// total_rollouts += i;
 	// turns++;
 	return root->get_best_move();
